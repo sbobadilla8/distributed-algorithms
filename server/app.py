@@ -1,20 +1,21 @@
-from flask import Flask, request
+from flask import Flask, request, current_app, jsonify
 from flask_cors import CORS
-from handlers.file import file_search
+from handlers.file import file_search, index_file
 
 app = Flask(__name__)
 cors = CORS(app)
 
 
-@app.route("/file", methods=['GET', 'POST', 'DELETE'])
+@app.route("/file", methods=['GET', 'POST', 'DELETE', 'OPTIONS'])
 def file():
-    if request.method == 'GET':
+    if request.method == 'OPTIONS':
+        return "", 204
+    elif request.method == 'GET':
         user_input = request.args.get('input', '')
         return file_search(user_input)
     elif request.method == 'POST':
-        return {
-            "hello": "world"
-        }
+        file_shared = request.json
+        return jsonify(index_file(file_shared)), 204
     else:
         return "", 404
 

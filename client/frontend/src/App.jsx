@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import {
   Box,
@@ -34,11 +34,12 @@ function App() {
   const [input, setInput] = useState("");
   const [results, setResults] = useState([]);
   const [file, setFile] = useState("");
+  const [files, setFiles] = useState([]);
 
   const searchFile = async () => {
     try {
       const { data } = await axios.get(
-        "http://localhost:8000/download?input" + input
+        "http://localhost:8000/file?input" + input
       );
       setResults(data);
     } catch (e) {
@@ -52,9 +53,53 @@ function App() {
     }
   };
 
-  const submitFile = () => {
-    console.log(file);
+  const submitFile = async () => {
+    try {
+      // Notify Idx Server
+      const srvResponse = await axios.post("http://localhost:8000/file", {
+        filename: file.name,
+        ip: "localhost:8080",
+        size: file.size,
+        blocks: 5,
+        checksum: "asdfqwerzxcv",
+      });
+      // Notify own backend
+      const { data } = await axios.post("http://localhost:8080/files", {
+        filename: file.name,
+        size: file.size,
+        blocks: 5,
+      });
+      setFiles(data);
+    } catch (e) {
+      console.log(e);
+      toast({
+        title: "Error",
+        description: "",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
+
+  const getFiles = async () => {
+    try {
+      const { data } = await axios.get("http://localhost:8080/files");
+      setFiles(data);
+    } catch (e) {
+      toast({
+        title: "Error",
+        description: "",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  useEffect(() => {
+    getFiles();
+  }, []);
 
   return (
     <>
@@ -96,11 +141,13 @@ function App() {
               </Tr>
             </Thead>
             <Tbody>
-              <Tr>
-                <Td>inches</Td>
-                <Td>millimetres (mm)</Td>
-                <Td isNumeric>25.4</Td>
-              </Tr>
+              {files.map((item, idx) => (
+                <Tr key={`file-${idx}`}>
+                  <Td>{item.filename}</Td>
+                  <Td>{item.size}</Td>
+                  <Td>{item.blocks}</Td>
+                </Tr>
+              ))}
             </Tbody>
           </Table>
         </TableContainer>
