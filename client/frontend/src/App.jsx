@@ -26,7 +26,9 @@ import {
   Td,
   Text,
   Flex,
+  IconButton,
 } from "@chakra-ui/react";
+import { BsDownload } from "react-icons/bs";
 
 function App() {
   const toast = useToast();
@@ -39,8 +41,9 @@ function App() {
   const searchFile = async () => {
     try {
       const { data } = await axios.get(
-        "http://localhost:8000/file?input" + input
+        "http://localhost:8000/file?input=" + input
       );
+      console.log(data);
       setResults(data);
     } catch (e) {
       toast({
@@ -175,28 +178,33 @@ function App() {
 
           <CardBody>
             <Stack divider={<StackDivider />} spacing="4">
-              {results.length &&
-                results.map((item, idx) => (
-                  <Box key={`result-${idx}`}>
-                    <Heading size="md" textTransform="uppercase">
-                      {item.name}
-                    </Heading>
-                    <StatGroup>
-                      <Stat>
-                        <StatLabel>Clients sharing</StatLabel>
-                        <StatNumber>{item.clients.length}</StatNumber>
-                      </Stat>
-                      <Stat>
-                        <StatLabel>Size</StatLabel>
-                        <StatNumber>{item.size}</StatNumber>
-                      </Stat>
-                      <Stat>
-                        <StatLabel>Number of blocks</StatLabel>
-                        <StatNumber>{item.blocks}</StatNumber>
-                      </Stat>
-                    </StatGroup>
-                  </Box>
-                ))}
+              {results.map((item, idx) => (
+                <Box key={`result-${idx}`}>
+                  <Heading size="md" textTransform="uppercase">
+                    {item.filename}
+                  </Heading>
+                  <StatGroup>
+                    <Stat>
+                      <StatLabel>Clients sharing</StatLabel>
+                      <StatNumber>{item.clients.length}</StatNumber>
+                    </Stat>
+                    <Stat>
+                      <StatLabel>Size</StatLabel>
+                      <StatNumber>{item.size}</StatNumber>
+                    </Stat>
+                    <Stat>
+                      <StatLabel>Number of blocks</StatLabel>
+                      <StatNumber>{item.blocks}</StatNumber>
+                    </Stat>
+                    <IconButton
+                      aria-label="download"
+                      colorScheme="teal"
+                      size="lg"
+                      icon={<BsDownload />}
+                    />
+                  </StatGroup>
+                </Box>
+              ))}
             </Stack>
           </CardBody>
         </Card>

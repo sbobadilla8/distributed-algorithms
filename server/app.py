@@ -12,7 +12,7 @@ def file():
         return "", 204
     elif request.method == 'GET':
         user_input = request.args.get('input', '')
-        return file_search(user_input)
+        return jsonify(file_search(user_input))
     elif request.method == 'POST':
         file_shared = request.json
         return jsonify(index_file(file_shared)), 204
