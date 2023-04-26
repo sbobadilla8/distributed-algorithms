@@ -27,15 +27,19 @@ import {
   Text,
   Flex,
   IconButton,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { BsDownload } from "react-icons/bs";
+import FilePicker from "./components/FilePicker.jsx";
 
 function App() {
   const toast = useToast();
 
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
   const [input, setInput] = useState("");
   const [results, setResults] = useState([]);
-  const [file, setFile] = useState("");
+
   const [files, setFiles] = useState([]);
 
   const searchFile = async () => {
@@ -43,7 +47,6 @@ function App() {
       const { data } = await axios.get(
         "http://localhost:8000/file?input=" + input
       );
-      console.log(data);
       setResults(data);
     } catch (e) {
       toast({
@@ -56,30 +59,13 @@ function App() {
     }
   };
 
-  const submitFile = async () => {
-    console.log(file);
+  const submitFile = async (file) => {
     try {
-      // Notify Idx Server
-      // const srvResponse = await axios.post("http://localhost:8000/file", {
-      //   filename: file.name,
-      //   ip: "localhost:8080",
-      //   size: file.size,
-      //   blocks: 5,
-      //   checksum: "asdfqwerzxcv",
-      // });
-      // Notify own backend
-      const { data } = await axios.post(
-        "http://localhost:8080/files",
-        {
-          file,
-        },
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const { data } = await axios.post("http://localhost:8080/files", {
+        file,
+      });
       setFiles(data);
+      onClose();
     } catch (e) {
       console.log(e);
       toast({
@@ -116,30 +102,10 @@ function App() {
       <Box m={4}>
         <Heading size="lg">Files being shared</Heading>
         <Flex direction="row" justify="flex-start" align="center">
-          <FormControl width="min-content" m={2}>
-            <Input
-              as="input"
-              sx={{
-                opacity: 0,
-                width: "0.1px",
-                height: "0.1px",
-                position: "absolute",
-              }}
-              type="file"
-              onChange={(e) => {
-                setFile(e.target.files[0]);
-              }}
-              id="file-input"
-            />
-            <Button as={FormLabel} colorScheme="teal" htmlFor="file-input">
-              Select file
-            </Button>
-          </FormControl>
-          <Text fontSize="xl">{file.name}</Text>
+          <Button colorScheme="teal" onClick={onOpen}>
+            Select file
+          </Button>
         </Flex>
-        <Button type="button" mt={4} colorScheme="teal" onClick={submitFile}>
-          Share
-        </Button>
 
         <TableContainer>
           <Table size="sm" variant="striped">
@@ -216,6 +182,7 @@ function App() {
           </CardBody>
         </Card>
       </Box>
+      <FilePicker isOpen={isOpen} onClose={onClose} submitFile={submitFile} />
     </>
   );
 }
