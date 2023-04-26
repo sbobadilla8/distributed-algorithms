@@ -1,13 +1,14 @@
 import math
 import hashlib
 
+
 class FileMgr:
     # Opens a file with the given file name. If file size is given, creates a new file of given size.
     def __init__(self, file_name, file_size=None):
         self.block_size = 2048
         self.file_name = file_name
-        
-        if(file_size != None):
+
+        if (file_size != None):
             self.file_descr = open(self.file_name, "w+b")
             self.file_size = file_size
             self.bytes_list = self.__create_empty_bytes_list()
@@ -63,17 +64,17 @@ class FileMgr:
         return self.block_list
 
     def __create_empty_bytes_list(self):
-        return [0]*self.file_size
+        return [0] * self.file_size
 
     def __write_file(self):
         file_content = bytes(self.bytes_list)
         self.file_descr.seek(0)
         self.file_descr.write(file_content)
-    
+
     def __del__(self):
         print("Closing {} . . .".format(self.file_name))
         self.file_descr.close()
-    
+
 ### Working Example ###
 # from random import shuffle
 

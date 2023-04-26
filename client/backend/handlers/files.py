@@ -1,3 +1,5 @@
+from .filemgr import FileMgr
+
 files = []
 
 
@@ -6,7 +8,9 @@ def get_files():
 
 
 def share_file(file):
-    files.append(file)
+    file_to_share = FileMgr(file.read())
+    print(file_to_share.get_block_list())
+    # files.append(file)
     return files
 
 

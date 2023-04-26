@@ -12,7 +12,7 @@ def files():
     elif request.method == 'GET':
         return jsonify(get_files())
     elif request.method == 'POST':
-        file = request.json
+        file = request.files['file']
         return jsonify(share_file(file))
     elif request.method == 'DELETE':
         file = request.json

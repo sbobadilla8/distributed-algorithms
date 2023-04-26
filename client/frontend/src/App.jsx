@@ -57,21 +57,28 @@ function App() {
   };
 
   const submitFile = async () => {
+    console.log(file);
     try {
       // Notify Idx Server
-      const srvResponse = await axios.post("http://localhost:8000/file", {
-        filename: file.name,
-        ip: "localhost:8080",
-        size: file.size,
-        blocks: 5,
-        checksum: "asdfqwerzxcv",
-      });
+      // const srvResponse = await axios.post("http://localhost:8000/file", {
+      //   filename: file.name,
+      //   ip: "localhost:8080",
+      //   size: file.size,
+      //   blocks: 5,
+      //   checksum: "asdfqwerzxcv",
+      // });
       // Notify own backend
-      const { data } = await axios.post("http://localhost:8080/files", {
-        filename: file.name,
-        size: file.size,
-        blocks: 5,
-      });
+      const { data } = await axios.post(
+        "http://localhost:8080/files",
+        {
+          file,
+        },
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
       setFiles(data);
     } catch (e) {
       console.log(e);
