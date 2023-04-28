@@ -1,32 +1,48 @@
+# import argparse
 import socket
 import threading
+import pickle as rick
+from handlers.filemgr import FileMgr
 
 class ServerConnection:
     def __init__(self, host, port):
-        print("Starting Server ...")
+        print("Starting TCP Server ...")
         self.host = host
         self.port = port
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind((host, port))
         self.socket.listen()
         print("Listening for connections ...")
+        thread = None
         while(True):
-            self.connection, self.address = self.socket.accept()
-            print("Connecting to {} ...".format(self.address))
-            thread = threading.Thread(target=self.handle_connection)
-            thread.start()
-            #thread.join()
+            try:
+                connection, address = self.socket.accept()
+                print("Connecting to {} ...".format(address))
+                thread = threading.Thread(target=self.handle_connection, args=[connection, address, on_data_receive])
+                thread.start()
+                
+            except KeyboardInterrupt:
+                print("Keyboard interrupt")
+                if(thread):
+                    print("Closing threads ...")
+                    thread.join()
+                break
 
-    def handle_connection(self):
-        data = ''
-        while(data != b'goodbye'):
-            data = self.connection.recv(2048)
-            print("Data: {}".format(data))
-        #print("Closing connection ...")
-        #self.connection.close()
     
-    def __del__(self):
-        print("Closing socket ...")
-        self.socket.close()
+    def handle_connection(self, connection, address):
+        msg = ''
+        while(msg != 'goodbye'):
+            data = connection.recv(4096)
+            msg = rick.loads(data)
+            print("Message Received: {}".format(msg))
+            self.handle_incoming_data(msg)
+        print("Closing connection {} ...".format(address))
+        connection.close()
 
-server = ServerConnection('127.0.0.1', 50004)
+    def handle_incoming_data(self, data):
+        # FileMgr.write_block_static_function(msg)
+        print("Data Received: {}".format(data))
+
+# def on_data_receive(msg):
+#     print("Message Received In Callback: {}".format(msg))
+# server = ServerConnection('127.0.0.1', 5000, on_data_receive)

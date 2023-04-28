@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 from handlers.files import get_files, share_file, remove_file
 from handlers.filepicker import get_list, change
+import argparse
+from handlers.server import ServerConnection
 
 app = Flask(__name__)
 cors = CORS(app)
@@ -34,4 +36,13 @@ def picker():
 
 
 if __name__ == "__main__":
+    # Create TCP Server for Client-Client file sharing
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument("-p", "--port", type=int)
+    # parser.add_argument("-a", "--address")
+
+    # args = parser.parse_args()
+    # host = args.address
+    # port = args.port
+    # server = ServerConnection(host, port)
     app.run(host="0.0.0.0", port=8080, debug=True)

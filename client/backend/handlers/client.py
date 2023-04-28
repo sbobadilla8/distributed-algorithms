@@ -1,5 +1,6 @@
 import socket
 import time
+import pickle as rick
         
 class ClientConnection:
     def __init__(self, host, port):
@@ -10,12 +11,22 @@ class ClientConnection:
         self.socket.connect((host, port))
 
     def send_message(self, data):
-        self.socket.send(data)
+        msg = rick.dumps(data)
+        self.socket.send(msg)
 
-client = ClientConnection('127.0.0.1',50004)
+    def close(self):
+        self.socket.close()
+
+    def __del__(self):
+        self.send_message('goodbye')
+        print("Closing the connection ... ")
+        self.close()
+
+client = ClientConnection('127.0.0.1',5000)
 time.sleep(1)
-client.send_message(b'hello')
-time.sleep(3)
-client.send_message(b'welcome')
-time.sleep(3)
-client.send_message(b'goodbye')
+client.send_message('hello')
+time.sleep(1)
+client.send_message([1,2,3,4])
+client.send_message({'file_name': "Image.png", 'block_id': 1, 'block': [1,2,3,4,5,6,7,8]})
+time.sleep(1)
+client.send_message('goodbye')
