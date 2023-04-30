@@ -2,7 +2,6 @@
 import socket
 import threading
 import pickle as rick
-from handlers.filemgr import FileMgr
 
 class ServerConnection:
     def __init__(self, host, port):
@@ -18,7 +17,7 @@ class ServerConnection:
             try:
                 connection, address = self.socket.accept()
                 print("Connecting to {} ...".format(address))
-                thread = threading.Thread(target=self.handle_connection, args=[connection, address, on_data_receive])
+                thread = threading.Thread(target=self.handle_connection, args=[connection, address])
                 thread.start()
                 
             except KeyboardInterrupt:
@@ -35,7 +34,7 @@ class ServerConnection:
             data = connection.recv(4096)
             msg = rick.loads(data)
             print("Message Received: {}".format(msg))
-            self.handle_incoming_data(msg)
+            # self.handle_incoming_data(msg)
         print("Closing connection {} ...".format(address))
         connection.close()
 
@@ -45,4 +44,4 @@ class ServerConnection:
 
 # def on_data_receive(msg):
 #     print("Message Received In Callback: {}".format(msg))
-# server = ServerConnection('127.0.0.1', 5000, on_data_receive)
+# server = ServerConnection('127.0.0.1', 5000)
