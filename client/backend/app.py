@@ -38,6 +38,12 @@ def picker():
         return change(cmd_input['dir'])
 
 
+@app.route("/download", methods=['POST', 'GET'])
+def download():
+    if request.method == 'POST':
+        return ""
+
+
 @app.route("/check", methods=['POST'])
 def check():
     return "", 204
