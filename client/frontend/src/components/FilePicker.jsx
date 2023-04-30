@@ -17,14 +17,14 @@ import {
 } from "@chakra-ui/react";
 import { BsFileFill, BsFolder } from "react-icons/bs";
 
-const FilePicker = ({ isOpen, onClose, submitFile }) => {
+const FilePicker = ({ isOpen, onClose, submitFile, backendAddress }) => {
   const toast = useToast();
 
   const [tree, setTree] = useState(null);
   const [file, setFile] = useState("");
   const getLocalFiles = async () => {
     try {
-      const { data } = await axios.post("http://localhost:8080/picker", {
+      const { data } = await axios.post(`http://${backendAddress}/picker`, {
         cmd: "ls",
       });
       setTree(data);
@@ -41,7 +41,7 @@ const FilePicker = ({ isOpen, onClose, submitFile }) => {
 
   const changeDirectory = async (dir) => {
     try {
-      const { data } = await axios.post("http://localhost:8080/picker", {
+      const { data } = await axios.post(`http://${backendAddress}/picker`, {
         cmd: "cd",
         dir,
       });
