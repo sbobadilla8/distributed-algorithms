@@ -1,7 +1,6 @@
 import requests
 from .filemgr import FileMgr
 
-files = []
 """
 file structure:
 {
@@ -12,26 +11,33 @@ file structure:
 """
 
 
-def get_files():
-    return files
+class Files:
 
+    def __init__(self):
+        self.files = []
+        self.tcp_port = None
 
-def share_file(file):
-    file_to_share = FileMgr(file)
-    r = requests.post('http://localhost:8000/file', json={'filename': file_to_share.file_name,
-                                                          "ip": "127.0.0.1",
-                                                          "size": file_to_share.get_file_bytes_size(),
-                                                          "blocks": file_to_share.get_file_block_size(),
-                                                          "checksum": file_to_share.get_md5_hash()
-                                                          })
-    files.append({"filename": file_to_share.file_name,
-                  "size": file_to_share.get_file_bytes_size(),
-                  "blocks": file_to_share.get_file_block_size()})
-    return files
+    def set_port(self, port):
+        self.tcp_port = port
 
+    def get_files(self):
+        return self.files
 
-def remove_file(file):
-    for item in files:
-        if item.name == file.name:
-            files.remove(file)
-    return files
+    def share_file(self, file):
+        file_to_share = FileMgr(file['file'])
+        r = requests.post('http://' + file['serverAddress'] + '/file', json={'filename': file_to_share.file_name,
+                                                                             'port': self.tcp_port,
+                                                                             "size": file_to_share.get_file_bytes_size(),
+                                                                             "blocks": file_to_share.get_file_block_size(),
+                                                                             "checksum": file_to_share.get_md5_hash()
+                                                                             })
+        self.files.append({"filename": file_to_share.file_name,
+                           "size": file_to_share.get_file_bytes_size(),
+                           "blocks": file_to_share.get_file_block_size()})
+        return self.files
+
+    def remove_file(self, file):
+        for item in self.files:
+            if item.name == file.name:
+                self.files.remove(file)
+        return self.files

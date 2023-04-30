@@ -1,12 +1,15 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
-from handlers.files import get_files, share_file, remove_file
+from handlers.files import Files
 from handlers.filepicker import get_list, change
 import argparse
 from handlers.server import ServerConnection
 
 app = Flask(__name__)
 cors = CORS(app)
+port_tcp = 0
+
+files = None
 
 
 @app.route("/files", methods=['GET', 'POST', 'DELETE', 'OPTIONS'])
@@ -14,13 +17,13 @@ def files():
     if request.method == 'OPTIONS':
         return "", 204
     elif request.method == 'GET':
-        return jsonify(get_files())
+        return jsonify(files.get_files())
     elif request.method == 'POST':
-        file = request.json['file']
-        return jsonify(share_file(file))
+        file = request.json
+        return jsonify(files.share_file(file))
     elif request.method == 'DELETE':
         file = request.json['file']
-        return remove_file(file)
+        return files.remove_file(file)
     else:
         return "", 404
 
@@ -35,14 +38,23 @@ def picker():
         return change(cmd_input['dir'])
 
 
+@app.route("/check", methods=['POST'])
+def check():
+    return "", 204
+
+
 if __name__ == "__main__":
     # Create TCP Server for Client-Client file sharing
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument("-p", "--port", type=int)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p1", "--port_web", type=int)
+    parser.add_argument("-p2", "--port_tcp", type=int)
     # parser.add_argument("-a", "--address")
 
-    # args = parser.parse_args()
+    args = parser.parse_args()
     # host = args.address
-    # port = args.port
+    port_web = args.port_web
+    port_tcp = args.port_tcp
+    files = Files()
+    files.set_port(port_tcp)
     # server = ServerConnection(host, port)
-    app.run(host="0.0.0.0", port=8080, debug=True)
+    app.run(host="0.0.0.0", port=port_web, debug=True)
