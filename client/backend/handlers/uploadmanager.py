@@ -3,6 +3,7 @@ import socket
 import threading
 from filemgr import FileMgr
 import pickle as rick
+import json
 
 class FileUploadManager:
     def __init__(self, host, port):
@@ -57,14 +58,25 @@ class FileUploadManager:
         print("Closing connection {} ...".format(address))
         connection.close()
 
-    def send_message(self, connection, message):
-        data = rick.dumps(message)
-        connection.send(data)
+    def send_message(self, connection, data):
+        # msg = rick.dumps(data)
+        message = json.dumps(data)
+        message += '\n'
+        connection.send(message.encode())
 
     def read_message(self, connection):
-        data = connection.recv(64 * 1024)
-        message = rick.loads(data)
-        return message
+        # data = connection.recv(64 * 1024)
+        # msg = rick.loads(data)
+        # return msg
+        message = ''
+        while True:
+            data = connection.recv(1)
+            char = data.decode()
+            if(char == '\n'):
+                break
+            else:
+                message += char
+        return json.loads(message)
 
     # def handle_incoming_data(self, connection, data):
     #     self.fileToUpload = None

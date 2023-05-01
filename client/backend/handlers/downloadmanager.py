@@ -3,9 +3,8 @@ import socket
 import pickle as rick
 import time
 import random
-from multiprocessing.pool import ThreadPool
-from concurrent.futures import as_completed, ThreadPoolExecutor
 from collections import deque
+import json
 from filemgr import FileMgr
 
 class FileDownloadManager:
@@ -22,7 +21,7 @@ class FileDownloadManager:
             thread.start()
             thread.join()
         print("Number of connected peers: {}".format(len(connectedPeers)))
-        time.sleep(3)
+        # time.sleep(3)
 
         # Create FileMgr object with given size
         self.fileToDownload = FileMgr(fileName, fileSize)
@@ -32,22 +31,7 @@ class FileDownloadManager:
         random.shuffle(self.blockIndices)
 
         # Request blocks from connected peers
-        # for connectedPeer in connectedPeers:
-        #     thread = threading.Thread(target=self.request_blocks_from_peer, args=[connectedPeer])
-        #     thread.start()
-        #     #thread.join()
-
-        # max_workers = 12
-        # with ThreadPoolExecutor(max_workers) as executor:
-        #     #future_executor = {executor.submit(self.request_blocks_from_peer, connectedPeer): connectedPeer for connectedPeer in connectedPeers}
-        #     future_executor = []
-        #     for peerIndex in range(0, max_workers):
-        #         future_executor.append(executor.submit(self.request_blocks_from_peer, connectedPeers[peerIndex % len(connectedPeers)]))
-        #     for future in as_completed(future_executor):
-        #         # result = future_executor[future]
-        #         print("Result: {}".format(future.result()))
-
-        maxThreads = 2
+        maxThreads = 12
         threads = []
 
         for threadIndex in range(0, maxThreads):
@@ -59,7 +43,6 @@ class FileDownloadManager:
             thread.join()
 
 
-        # time.sleep(3)
         # TODO: Verify file integrity
 
         # Close all connected peers
@@ -107,15 +90,31 @@ class FileDownloadManager:
         peerConnection.close()
 
     def send_message(self, connection, data):
-        msg = rick.dumps(data)
-        connection.send(msg)
+        # msg = rick.dumps(data)
+        message = json.dumps(data)
+        message += '\n'
+        connection.send(message.encode())
 
     def read_message(self, connection):
-        data = connection.recv(64 * 1024)
-        msg = rick.loads(data)
-        return msg
+        # data = connection.recv(64 * 1024)
+        # msg = rick.loads(data)
+        # return msg
+        self.peerConnectionMutex.acquire()
+        message = ''
+        while True:
+            data = connection.recv(1)
+            char = data.decode()
+            if(char == '\n'):
+                break
+            else:
+                message += char
+        self.peerConnectionMutex.release()
+        return json.loads(message)
 
-downloadFile = FileDownloadManager("Image.png", 494787, [{'host': '127.0.0.1', 'port': 6000},{'host': '127.0.0.1', 'port': 6001}])
+clients = []
+clients.append({'host': '127.0.0.1', 'port': 6000})
+# clients.append({'host': '127.0.0.1', 'port': 6001})
+downloadFile = FileDownloadManager("Image.png", 494787, clients)
 
 ### Client Requests
 # {
