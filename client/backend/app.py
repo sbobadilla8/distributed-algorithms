@@ -1,9 +1,11 @@
+import argparse
+import os
+import threading
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
-from handlers.files import Files
+from handlers.files import Files, download_file
 from handlers.filepicker import get_list, change
-import argparse
-from handlers.server import ServerConnection
+from handlers.uploadmanager import FileUploadManager
 
 app = Flask(__name__)
 cors = CORS(app)
@@ -41,7 +43,8 @@ def picker():
 @app.route("/download", methods=['POST', 'GET'])
 def download():
     if request.method == 'POST':
-        return ""
+        file = request.json
+        return download_file(file)
 
 
 @app.route("/check", methods=['POST'])
@@ -49,7 +52,12 @@ def check():
     return "", 204
 
 
-if __name__ == "__main__":
+def create_listener(port):
+    FileUploadManager("", port)
+
+
+# if __name__ == "__main__":
+def run_app():
     # Create TCP Server for Client-Client file sharing
     parser = argparse.ArgumentParser()
     parser.add_argument("-p1", "--port_web", type=int)
@@ -62,5 +70,17 @@ if __name__ == "__main__":
     port_tcp = args.port_tcp
     files = Files()
     files.set_port(port_tcp)
-    # server = ServerConnection(host, port)
+
+    try:
+        os.makedirs("downloads")
+    except OSError:
+        print("Directory for downloads already exists")
+
+    # flask_thread = threading.Thread(target=app.run, args=["0.0.0.0", port_web, True])
+    # flask_thread.start()
+
+    thread = threading.Thread(target=create_listener, args=[port_tcp])
+    thread.daemon = True
+    thread.start()
+    # server = FileUploadManager("", port_tcp)
     app.run(host="0.0.0.0", port=port_web, debug=True)

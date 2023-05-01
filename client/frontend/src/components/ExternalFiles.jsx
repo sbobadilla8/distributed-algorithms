@@ -21,7 +21,7 @@ import {
 } from "@chakra-ui/react";
 import { BsDownload } from "react-icons/bs";
 
-const ExternalFiles = ({ serverAddress }) => {
+const ExternalFiles = ({ serverAddress, backendAddress }) => {
   const toast = useToast();
 
   const [input, setInput] = useState("");
@@ -32,6 +32,24 @@ const ExternalFiles = ({ serverAddress }) => {
         `http://${serverAddress}/file?input=${input}`
       );
       setResults(data);
+    } catch (e) {
+      toast({
+        title: "Error",
+        description: "Something went wrong.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const startDownload = (item) => {
+    try {
+      const response = axios.post(`http://${backendAddress}/download`, {
+        filename: item.filename,
+        size: item.size,
+        clients: item.clients,
+      });
     } catch (e) {
       toast({
         title: "Error",
@@ -91,6 +109,7 @@ const ExternalFiles = ({ serverAddress }) => {
                     aria-label="download"
                     colorScheme="teal"
                     size="lg"
+                    onClick={() => startDownload(item)}
                     icon={<BsDownload />}
                   />
                 </StatGroup>

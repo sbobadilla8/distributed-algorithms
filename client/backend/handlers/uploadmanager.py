@@ -1,12 +1,13 @@
 # import argparse
 import socket
 import threading
-from filemgr import FileMgr
+from .filemgr import FileMgr
 import pickle as rick
+
 
 class FileUploadManager:
     def __init__(self, host, port):
-        print("Starting TCP Server ...")
+        print("Starting TCP Server in ...{}{}".format(host, port))
         self.host = host
         self.port = port
         self.fileToUpload = {}
@@ -16,55 +17,54 @@ class FileUploadManager:
         self.fileMgrMutex = threading.Lock()
         print("Listening for connections ...")
         thread = None
-        while(True):
+        while True:
             try:
                 connection, address = self.socket.accept()
                 print("Connecting to {} ...".format(address))
                 thread = threading.Thread(target=self.handle_connection, args=[connection, address])
                 thread.start()
-                
+
             except KeyboardInterrupt:
                 print("Keyboard interrupt")
-                if(thread):
+                if thread:
                     print("Closing threads ...")
                     thread.join()
                 break
 
-    
     def handle_connection(self, connection, address):
         closeConnection = False
-        while(not closeConnection):
+        while not closeConnection:
             message = self.read_message(connection)
             # print("Message Received: {}".format(message))
             # closeConnection = self.handle_incoming_data(connection, message)
-            if(message):
+            if message:
                 action = message['action']
-                if(action == 'Request_Download'):
+                if action == 'Request_Download':
                     fileName = message['payload']['file_name']
                     print("Client requests download of {}".format(fileName))
                     # Open File Manager
                     self.fileMgrMutex.acquire()
                     # print("fileToUpload = {}".format(self.fileToUpload))
-                    if(fileName not in self.fileToUpload.keys()):
+                    if (fileName not in self.fileToUpload.keys()):
                         self.fileToUpload[fileName] = FileMgr(fileName)
                         print("{} successfully opened".format(fileName))
                     else:
                         print("{} already opened".format(fileName))
                     self.fileMgrMutex.release()
-                    dataToSend = { 'result': 'ACK' }
+                    dataToSend = {'result': 'ACK'}
                     self.send_message(connection, dataToSend)
-                if(action == 'Request_Block'):
+                if action == 'Request_Block':
                     blockIndex = message['payload']['block_index']
                     fileName = message['payload']['file_name']
                     # print("Client requests upload of block index: {}".format(blockIndex))
                     blockToSend = self.fileToUpload[fileName].get_block(blockIndex)
-                    dataToSend = { 'result': { 'block': blockToSend }}
+                    dataToSend = {'result': {'block': blockToSend}}
                     # print("Sending block {}".format(blockIndex))
                     self.send_message(connection, dataToSend)
-                if(action == 'Close_Connection'):
+                if action == 'Close_Connection':
                     fileName = message['payload']['file_name']
                     self.fileMgrMutex.acquire()
-                    if(fileName in self.fileToUpload.keys()):
+                    if (fileName in self.fileToUpload.keys()):
                         del self.fileToUpload[fileName]
                     self.fileMgrMutex.release()
                     closeConnection = True

@@ -1,5 +1,7 @@
 import requests
+import threading
 from .filemgr import FileMgr
+from .downloadmanager import FileDownloadManager
 
 """
 file structure:
@@ -9,6 +11,14 @@ file structure:
     blocks
 }
 """
+
+
+def download_file(file):
+    download_manager = FileDownloadManager(file['filename'], file['size'], file['clients'])
+    thread = threading.Thread(target=download_manager.initiate_download)
+    thread.start()
+    # thread.join()
+    return "", 200
 
 
 class Files:

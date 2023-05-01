@@ -79,7 +79,10 @@ function App() {
             backendAddress={backendAddress}
             serverAddress={serverAddress}
           />
-          <ExternalFiles serverAddress={serverAddress} />
+          <ExternalFiles
+            serverAddress={serverAddress}
+            backendAddress={backendAddress}
+          />
         </Box>
       )}
     </>
