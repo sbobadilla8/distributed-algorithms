@@ -37,7 +37,7 @@ class FileDownloadManager:
 
         # Request Connection to all available peers
         # Peers which respond all get stored in connected_peers
-        print("Connecting to peers ...")
+        print("DownloadManager::initiate_download::Connecting to peers ...")
         max_threads = 12
         connection_threads = []
         for threadIndex in range(0, max_threads):
@@ -56,7 +56,7 @@ class FileDownloadManager:
         random.shuffle(self.block_indices)
 
         # Request blocks from connected peers
-        print("Downloading file blocks ...")
+        print("DownloadManager::initiate_download::Downloading file blocks ...")
         block_threads = []
         for threadIndex in range(0, max_threads):
             thread = threading.Thread(target=self.request_blocks_from_peer, args=[self.connected_peers[threadIndex]])
@@ -69,7 +69,7 @@ class FileDownloadManager:
         # TODO: Verify file integrity
 
         # Close all connected peers
-        print("Closing all peers ...")
+        print("DownloadManager::initiate_download::Closing all peers ...")
         for connectedPeer in self.connected_peers:
             thread = threading.Thread(target=self.close_peer_connection, args=[connectedPeer])
             thread.start()
@@ -103,18 +103,18 @@ class FileDownloadManager:
             block_index = self.block_indices.popleft()
             self.blockIndexMutex.release()
             # Request block from the connectedPeer
-            # print("Requesting block {} from {}".format(block_index, connectedPeer.getpeername()))
+            # print("DownloadManager::request_blocks_from_peer::Requesting block {} from {}".format(block_index, connectedPeer.getpeername()))
             send_message(connected_peer, {'action': 'Request_Block',
                                           'payload': {'block_index': block_index,
                                                       'file_name': self.file_name}})
             message = read_message(connected_peer)
             if message['result']:
-                # print("Received block {} from {}".format(block_index, connectedPeer.getpeername()))
+                # print("DownloadManager::request_blocks_from_peer::Received block {} from {}".format(block_index, connectedPeer.getpeername()))
                 block = message['result']['block']
                 self.fileWriteMutex.acquire()
                 self.file_to_download.write_block(block, block_index)
                 self.fileWriteMutex.release()
-                # print("Finished writing block {} to file".format(block_index))
+                # print("DownloadManager::request_blocks_from_peer::Finished writing block {} to file".format(block_index))
 
     def close_peer_connection(self, connected_peer):
         send_message(connected_peer, {'action': 'Close_Connection',
