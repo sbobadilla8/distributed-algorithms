@@ -42,8 +42,16 @@ def picker():
 
 @app.route("/download", methods=['POST', 'GET'])
 def download():
-    if request.method == 'POST':
-        file = request.json
+    if request.method == 'GET':
+        filename = request.args.get('filename', '')
+        size = request.args.get('size', 0)
+        clients = request.args.get('clients', [])
+        # TODO: check multiple clients
+        file = {
+            "filename": filename,
+            "size": size,
+            "clients": [clients]
+        }
         return download_file(file)
 
 
@@ -56,8 +64,7 @@ def create_listener(port):
     FileUploadManager("", port)
 
 
-# if __name__ == "__main__":
-def run_app():
+if __name__ == "__main__":
     # Create TCP Server for Client-Client file sharing
     parser = argparse.ArgumentParser()
     parser.add_argument("-p1", "--port_web", type=int)
@@ -76,11 +83,8 @@ def run_app():
     except OSError:
         print("Directory for downloads already exists")
 
-    # flask_thread = threading.Thread(target=app.run, args=["0.0.0.0", port_web, True])
-    # flask_thread.start()
-
     thread = threading.Thread(target=create_listener, args=[port_tcp])
     thread.daemon = True
     thread.start()
-    # server = FileUploadManager("", port_tcp)
+
     app.run(host="0.0.0.0", port=port_web, debug=True)

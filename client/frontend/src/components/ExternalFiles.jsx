@@ -44,21 +44,21 @@ const ExternalFiles = ({ serverAddress, backendAddress }) => {
   };
 
   const startDownload = (item) => {
-    try {
-      const response = axios.post(`http://${backendAddress}/download`, {
-        filename: item.filename,
-        size: item.size,
-        clients: item.clients,
-      });
-    } catch (e) {
-      toast({
-        title: "Error",
-        description: "Something went wrong.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
+    axios({
+      method: "get",
+      url: `http://${backendAddress}/download?filename=${item.filename}&size=${item.size}&clients=${item.clients}`,
+      // responseType: "stream",
+    })
+      .catch((e) =>
+        toast({
+          title: "Error",
+          description: "Something went wrong.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        })
+      )
+      .then((response) => console.log(response));
   };
 
   return (

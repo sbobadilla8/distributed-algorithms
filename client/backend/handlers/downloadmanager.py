@@ -122,16 +122,18 @@ class FileDownloadManager:
         connected_peer.close()
 
     def get_download_progress(self):
+        if self.block_indices is None:
+            return 0.0
         self.blockIndexMutex.acquire()
         remaining_blocks = len(self.block_indices)
         self.blockIndexMutex.release()
         total_blocks = self.file_to_download.get_file_block_size()
         progress = (total_blocks - remaining_blocks) / total_blocks
-        return f'{progress*100}%'
+        return progress
 
 
-clients = []
-clients.append('127.0.0.1:6000')
+# clients = []
+# clients.append('127.0.0.1:6000')
 # clients.append('127.0.0.1:6001')
 # clients.append('127.0.0.1:6002')
 # clients.append('127.0.0.1:6003')

@@ -17,8 +17,16 @@ def download_file(file):
     download_manager = FileDownloadManager(file['filename'], file['size'], file['clients'])
     thread = threading.Thread(target=download_manager.initiate_download)
     thread.start()
+
+    def send_progress():
+        value = download_manager.get_download_progress()
+        while value <= 1:
+            yield value, {"Content-Type": "text/plain"}
+            value = download_manager.get_download_progress()
+
+    return send_progress()
     # thread.join()
-    return "", 200
+    # return "", 200
 
 
 class Files:
