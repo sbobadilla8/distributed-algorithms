@@ -3,7 +3,7 @@ import os
 import threading
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
-from handlers.files import Files, download_file
+from handlers.files import Files
 from handlers.filepicker import get_list, change
 from handlers.uploadmanager import FileUploadManager
 
@@ -42,17 +42,12 @@ def picker():
 
 @app.route("/download", methods=['POST', 'GET'])
 def download():
-    if request.method == 'GET':
-        filename = request.args.get('filename', '')
-        size = request.args.get('size', 0)
-        clients = request.args.get('clients', [])
-        # TODO: check multiple clients
-        file = {
-            "filename": filename,
-            "size": size,
-            "clients": [clients]
-        }
-        return download_file(file)
+    if request.method == 'POST':
+        file = request.json
+        return files.download_file(file), 200
+    elif request.method == 'GET':
+        file = request.args.get('filename', '')
+        return jsonify(files.get_update(file))
 
 
 @app.route("/check", methods=['POST'])

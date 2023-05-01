@@ -13,27 +13,12 @@ file structure:
 """
 
 
-def download_file(file):
-    download_manager = FileDownloadManager(file['filename'], file['size'], file['clients'])
-    thread = threading.Thread(target=download_manager.initiate_download)
-    thread.start()
-
-    def send_progress():
-        value = download_manager.get_download_progress()
-        while value <= 1:
-            yield value, {"Content-Type": "text/plain"}
-            value = download_manager.get_download_progress()
-
-    return send_progress()
-    # thread.join()
-    # return "", 200
-
-
 class Files:
 
     def __init__(self):
         self.files = []
         self.tcp_port = None
+        self.managers = {}
 
     def set_port(self, port):
         self.tcp_port = port
@@ -59,3 +44,16 @@ class Files:
             if item.name == file.name:
                 self.files.remove(file)
         return self.files
+
+    def download_file(self, file):
+        download_manager = FileDownloadManager(file['filename'], file['size'], file['clients'])
+        self.managers[file['filename']] = download_manager
+        thread = threading.Thread(target=download_manager.initiate_download)
+        thread.start()
+        return ""
+
+    def get_update(self, file):
+        value = self.managers[file].get_download_progress()
+        print(".....................")
+        print(value)
+        return {"value": value}

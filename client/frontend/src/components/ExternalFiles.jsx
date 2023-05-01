@@ -11,6 +11,7 @@ import {
   Heading,
   IconButton,
   Input,
+  Progress,
   Stack,
   StackDivider,
   Stat,
@@ -26,6 +27,7 @@ const ExternalFiles = ({ serverAddress, backendAddress }) => {
 
   const [input, setInput] = useState("");
   const [results, setResults] = useState([]);
+
   const searchFile = async () => {
     try {
       const { data } = await axios.get(
@@ -43,22 +45,38 @@ const ExternalFiles = ({ serverAddress, backendAddress }) => {
     }
   };
 
-  const startDownload = (item) => {
-    axios({
-      method: "get",
-      url: `http://${backendAddress}/download?filename=${item.filename}&size=${item.size}&clients=${item.clients}`,
-      // responseType: "stream",
-    })
-      .catch((e) =>
-        toast({
-          title: "Error",
-          description: "Something went wrong.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        })
-      )
-      .then((response) => console.log(response));
+  const startDownload = async (item) => {
+    try {
+      const response = await axios.post(`http://${backendAddress}/download`, {
+        filename: item.filename,
+        size: item.size,
+        clients: item.clients,
+      });
+      let flag = false;
+      let intervalId = setInterval(async () => {
+        const { data } = await axios.get(
+          `http://${backendAddress}/download?filename=${item.filename}`
+        );
+        const progress = data.value;
+        if (parseFloat(progress) < 1.0) {
+          console.log(progress);
+        } else {
+          flag = true;
+        }
+      }, 1000);
+      if (flag) {
+        console.log(1);
+        clearInterval(intervalId);
+      }
+    } catch (e) {
+      toast({
+        title: "Error",
+        description: "Something went wrong.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   return (
@@ -113,6 +131,7 @@ const ExternalFiles = ({ serverAddress, backendAddress }) => {
                     icon={<BsDownload />}
                   />
                 </StatGroup>
+                <Progress value={80} />
               </Box>
             ))}
           </Stack>
