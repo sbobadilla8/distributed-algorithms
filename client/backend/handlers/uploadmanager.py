@@ -7,7 +7,7 @@ import pickle as rick
 
 class FileUploadManager:
     def __init__(self, host, port):
-        print("Starting TCP Server in ...{}:{}".format(host, port))
+        print("UploadManager::__init__::Starting TCP Server in ...{}:{}".format(host, port))
         self.host = host
         self.port = port
         self.fileToUpload = {}
@@ -15,19 +15,19 @@ class FileUploadManager:
         self.socket.bind((host, port))
         self.socket.listen()
         self.fileMgrMutex = threading.Lock()
-        print("Listening for connections ...")
+        print("UploadManager::__init__::Listening for connections ...")
         thread = None
         while True:
             try:
                 connection, address = self.socket.accept()
-                print("Connecting to {} ...".format(address))
+                print("UploadManager::__init__::Connecting to {} ...".format(address))
                 thread = threading.Thread(target=self.handle_connection, args=[connection, address])
                 thread.start()
 
             except KeyboardInterrupt:
-                print("Keyboard interrupt")
+                print("UploadManager::__init__::Keyboard interrupt")
                 if thread:
-                    print("Closing threads ...")
+                    print("UploadManager::__init__::Closing threads ...")
                     thread.join()
                 break
 
@@ -35,31 +35,31 @@ class FileUploadManager:
         closeConnection = False
         while not closeConnection:
             message = self.read_message(connection)
-            # print("Message Received: {}".format(message))
+            # print("UploadManager::handle_connection::Message Received: {}".format(message))
             # closeConnection = self.handle_incoming_data(connection, message)
             if message:
                 action = message['action']
                 if action == 'Request_Download':
                     fileName = message['payload']['file_name']
-                    print("Client requests download of {}".format(fileName))
+                    print("UploadManager::handle_connection::Client requests download of {}".format(fileName))
                     # Open File Manager
                     self.fileMgrMutex.acquire()
-                    # print("fileToUpload = {}".format(self.fileToUpload))
+                    # print("UploadManager::handle_connection::fileToUpload = {}".format(self.fileToUpload))
                     if (fileName not in self.fileToUpload.keys()):
                         self.fileToUpload[fileName] = FileMgr(fileName)
-                        print("{} successfully opened".format(fileName))
+                        print("UploadManager::handle_connection::{} successfully opened".format(fileName))
                     else:
-                        print("{} already opened".format(fileName))
+                        print("UploadManager::handle_connection::{} already opened".format(fileName))
                     self.fileMgrMutex.release()
                     dataToSend = {'result': 'ACK'}
                     self.send_message(connection, dataToSend)
                 if action == 'Request_Block':
                     blockIndex = message['payload']['block_index']
                     fileName = message['payload']['file_name']
-                    # print("Client requests upload of block index: {}".format(blockIndex))
+                    # print("UploadManager::handle_connection::Client requests upload of block index: {}".format(blockIndex))
                     blockToSend = self.fileToUpload[fileName].get_block(blockIndex)
                     dataToSend = {'result': {'block': blockToSend}}
-                    # print("Sending block {}".format(blockIndex))
+                    # print("UploadManager::handle_connection::Sending block {}".format(blockIndex))
                     self.send_message(connection, dataToSend)
                 if action == 'Close_Connection':
                     fileName = message['payload']['file_name']
@@ -68,7 +68,7 @@ class FileUploadManager:
                         del self.fileToUpload[fileName]
                     self.fileMgrMutex.release()
                     closeConnection = True
-        print("Closing connection {} ...".format(address))
+        print("UploadManager::handle_connection::Closing connection {} ...".format(address))
         connection.close()
 
     def send_message(self, connection, data):
