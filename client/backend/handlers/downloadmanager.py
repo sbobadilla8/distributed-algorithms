@@ -79,9 +79,10 @@ class FileDownloadManager:
         self.file_to_download = FileMgr("downloads/"+self.file_name, self.file_size)
 
     def request_peer_connection(self, peer):
+        address = peer.split(':')
         connected_peer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         connected_peer.settimeout(2 * 60)
-        connected_peer.connect(peer)
+        connected_peer.connect((address[0], int(address[1])))
         send_message(connected_peer, {'action': 'Request_Download',
                                       'payload': {'file_name': self.file_name}})
         message = read_message(connected_peer)
@@ -120,18 +121,28 @@ class FileDownloadManager:
                                       'payload': {'file_name': self.file_name}})
         connected_peer.close()
 
+    def get_download_progress(self):
+        self.blockIndexMutex.acquire()
+        remaining_blocks = len(self.block_indices)
+        self.blockIndexMutex.release()
+        total_blocks = self.file_to_download.get_file_block_size()
+        progress = (total_blocks - remaining_blocks) / total_blocks
+        return f'{progress*100}%'
 
-# clients = []
-# clients.append({'host': '127.0.0.1', 'port': 6000})
-# clients.append({'host': '127.0.0.1', 'port': 6001})
-# clients.append({'host': '127.0.0.1', 'port': 6002})
-# clients.append({'host': '127.0.0.1', 'port': 6003})
-# clients.append({'host': '127.0.0.1', 'port': 6004})
-# clients.append({'host': '127.0.0.1', 'port': 6005})
+
+clients = []
+clients.append('127.0.0.1:6000')
+# clients.append('127.0.0.1:6001')
+# clients.append('127.0.0.1:6002')
+# clients.append('127.0.0.1:6003')
+# clients.append('127.0.0.1:6004')
+# clients.append('127.0.0.1:6005')
+
 # start = time.time()
 # downloadFile = FileDownloadManager("Large_File.bin", 1048576000, clients)
 # downloadFile = FileDownloadManager("sql_dump.sql", 215914710, clients)
 # downloadFile = FileDownloadManager("Image.png", 494787, clients)
+# downloadFile.initiate_download()
 # end = time.time()
 # print("Total time required: {}seconds".format(end-start))
 

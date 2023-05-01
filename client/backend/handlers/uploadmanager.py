@@ -7,7 +7,7 @@ import pickle as rick
 
 class FileUploadManager:
     def __init__(self, host, port):
-        print("Starting TCP Server in ...{}{}".format(host, port))
+        print("Starting TCP Server in ...{}:{}".format(host, port))
         self.host = host
         self.port = port
         self.fileToUpload = {}
