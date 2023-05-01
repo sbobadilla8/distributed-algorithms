@@ -49,9 +49,8 @@ class FileUploadManager:
                     blockIndex = message['payload']['block_index']
                     print("Client requests upload of block index: {}".format(blockIndex))
                     blockToSend = fileToUpload.get_block(blockIndex)
-                    # TODO: pickling of data is crashing when sending actual block of data
-                    # dataToSend = { 'result': { 'block': blockToSend }}
-                    dataToSend = { 'result': { 'block': [1,2,3,4,5] }}
+                    dataToSend = { 'result': { 'block': blockToSend }}
+                    # dataToSend = { 'result': { 'block': [1,2,3,4,5] }}
                     self.send_message(connection, dataToSend)
                 if(action == 'Close_Connection'):
                     closeConnection = True
@@ -63,7 +62,7 @@ class FileUploadManager:
         connection.send(data)
 
     def read_message(self, connection):
-        data = connection.recv(4096)
+        data = connection.recv(64 * 1024)
         message = rick.loads(data)
         return message
 
@@ -94,4 +93,5 @@ class FileUploadManager:
 #     print("Message Received In Callback: {}".format(message))
 # server = ServerConnection('127.0.0.1', 5000)
 
-fileUploadManager = FileUploadManager('127.0.0.1', 6000)
+threading.Thread(target=FileUploadManager, args=['127.0.0.1', 6000]).start()
+threading.Thread(target=FileUploadManager, args=['127.0.0.1', 6001]).start()
