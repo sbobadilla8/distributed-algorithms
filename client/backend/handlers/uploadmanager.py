@@ -3,16 +3,17 @@ import socket
 import threading
 from filemgr import FileMgr
 import pickle as rick
-import json
 
 class FileUploadManager:
     def __init__(self, host, port):
         print("Starting TCP Server ...")
         self.host = host
         self.port = port
+        self.fileToUpload = {}
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind((host, port))
         self.socket.listen()
+        self.fileMgrMutex = threading.Lock()
         print("Listening for connections ...")
         thread = None
         while(True):
@@ -32,10 +33,9 @@ class FileUploadManager:
     
     def handle_connection(self, connection, address):
         closeConnection = False
-        fileToUpload = None
         while(not closeConnection):
             message = self.read_message(connection)
-            print("Message Received: {}".format(message))
+            # print("Message Received: {}".format(message))
             # closeConnection = self.handle_incoming_data(connection, message)
             if(message):
                 action = message['action']
@@ -43,67 +43,45 @@ class FileUploadManager:
                     fileName = message['payload']['file_name']
                     print("Client requests download of {}".format(fileName))
                     # Open File Manager
-                    fileToUpload = FileMgr(fileName)
+                    self.fileMgrMutex.acquire()
+                    # print("fileToUpload = {}".format(self.fileToUpload))
+                    if(fileName not in self.fileToUpload.keys()):
+                        self.fileToUpload[fileName] = FileMgr(fileName)
+                        print("{} successfully opened".format(fileName))
+                    else:
+                        print("{} already opened".format(fileName))
+                    self.fileMgrMutex.release()
                     dataToSend = { 'result': 'ACK' }
                     self.send_message(connection, dataToSend)
                 if(action == 'Request_Block'):
                     blockIndex = message['payload']['block_index']
-                    print("Client requests upload of block index: {}".format(blockIndex))
-                    blockToSend = fileToUpload.get_block(blockIndex)
+                    fileName = message['payload']['file_name']
+                    # print("Client requests upload of block index: {}".format(blockIndex))
+                    blockToSend = self.fileToUpload[fileName].get_block(blockIndex)
                     dataToSend = { 'result': { 'block': blockToSend }}
-                    # dataToSend = { 'result': { 'block': [1,2,3,4,5] }}
+                    # print("Sending block {}".format(blockIndex))
                     self.send_message(connection, dataToSend)
                 if(action == 'Close_Connection'):
+                    fileName = message['payload']['file_name']
+                    self.fileMgrMutex.acquire()
+                    if(fileName in self.fileToUpload.keys()):
+                        del self.fileToUpload[fileName]
+                    self.fileMgrMutex.release()
                     closeConnection = True
         print("Closing connection {} ...".format(address))
         connection.close()
 
     def send_message(self, connection, data):
-        # msg = rick.dumps(data)
-        message = json.dumps(data)
-        message += '\n'
-        connection.send(message.encode())
+        connection.send(rick.dumps(data))
 
     def read_message(self, connection):
-        # data = connection.recv(64 * 1024)
-        # msg = rick.loads(data)
-        # return msg
-        message = ''
-        while True:
-            data = connection.recv(1)
-            char = data.decode()
-            if(char == '\n'):
-                break
-            else:
-                message += char
-        return json.loads(message)
+        data = connection.recv(32 * 1024)
+        message = rick.loads(data)
+        return message
 
-    # def handle_incoming_data(self, connection, data):
-    #     self.fileToUpload = None
-    #     if(data):
-    #         print(data)
-    #         action = data['action']
-    #         if(action == 'Request_Download'):
-    #             fileName = data['payload']['file_name']
-    #             print("Client requests download of {}".format(fileName))
-    #             # Open File Manager
-    #             #self.fileToUpload = FileMgr(fileName)
-    #             dataToSend = { 'result': 'ACK' }
-    #             super().send_message(connection, dataToSend)
-    #         if(action == 'Request_Block'):
-    #             blockIndex = data['payload']['block_index']
-    #             print("Client requests upload of block index: {}".format(blockIndex))
-    #             # blockToSend = self.fileToUpload.get_block(blockIndex)
-    #             dataToSend = { 'result': { 'block': [1,2,3,4,5] }}
-    #             super().send_message(connection, dataToSend)
-    #         if(action == 'Close_Connection'):
-    #             # Close File Manager
-    #             return True
-    #     return False
-
-# def on_data_receive(message):
-#     print("Message Received In Callback: {}".format(message))
-# server = ServerConnection('127.0.0.1', 5000)
-
-threading.Thread(target=FileUploadManager, args=['127.0.0.1', 6000]).start()
-threading.Thread(target=FileUploadManager, args=['127.0.0.1', 6001]).start()
+# threading.Thread(target=FileUploadManager, args=['127.0.0.1', 6000]).start()
+# threading.Thread(target=FileUploadManager, args=['127.0.0.1', 6001]).start()
+# threading.Thread(target=FileUploadManager, args=['127.0.0.1', 6002]).start()
+# threading.Thread(target=FileUploadManager, args=['127.0.0.1', 6003]).start()
+# threading.Thread(target=FileUploadManager, args=['127.0.0.1', 6004]).start()
+# threading.Thread(target=FileUploadManager, args=['127.0.0.1', 6005]).start()

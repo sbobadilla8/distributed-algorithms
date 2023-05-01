@@ -5,7 +5,7 @@ import hashlib
 class FileMgr:
     # Opens a file with the given file name. If file size is given, creates a new file of given size.
     def __init__(self, file_name, file_size=None):
-        self.block_size = 16 * 1024
+        self.block_size = 4 * 1024
         self.file_name = file_name
 
         if (file_size != None):
