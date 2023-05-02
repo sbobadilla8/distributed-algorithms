@@ -1,5 +1,5 @@
 from mutex import HemlockThread, Lock, lock, unlock
-from time import sleep, time
+from time import sleep
 
 # mutex = Lock()
 l1 = Lock()
@@ -8,14 +8,12 @@ l1 = Lock()
 def increase(var, h):
     for i in range(10):
         # mutex.acquire()
-        print(f'Entering {i} lock for {h}')
-        lock(l1, hemlocks[h], h)
+        lock(l1, hemlocks[h])
         temp = var['value']
-        print(temp)
-        # sleep(1)
+        # print(temp)
+        sleep(0.001)
         var['value'] = temp + 1
-        unlock(l1, hemlocks[h], h, i)
-        print(f'Exiting {i} unlock for {h}')
+        unlock(l1, hemlocks[h])
         # mutex.release()
 
 
