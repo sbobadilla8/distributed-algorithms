@@ -1,53 +1,41 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import {
+  AbsoluteCenter,
   Box,
-  Input,
+  Button,
   FormControl,
   FormLabel,
-  Button,
-  Card,
-  CardHeader,
-  Heading,
-  CardBody,
-  Stack,
-  StackDivider,
-  Stat,
-  StatLabel,
-  StatNumber,
+  Input,
   useToast,
-  StatGroup,
-  Th,
-  TableContainer,
-  Table,
-  Thead,
-  Tr,
-  Tbody,
-  Td,
-  Text,
-  Flex,
-  IconButton,
-  useDisclosure,
 } from "@chakra-ui/react";
-import { BsDownload } from "react-icons/bs";
-import FilePicker from "./components/FilePicker.jsx";
+
+import LocalFiles from "./components/LocalFiles.jsx";
+import ExternalFiles from "./components/ExternalFiles.jsx";
 
 function App() {
   const toast = useToast();
+  const [backendAddress, setBackendAddress] = useState("");
+  const [serverAddress, setServerAddress] = useState("");
+  const [connected, setConnected] = useState(null);
 
-  const { isOpen, onOpen, onClose } = useDisclosure();
-
-  const [input, setInput] = useState("");
-  const [results, setResults] = useState([]);
-
-  const [files, setFiles] = useState([]);
-
-  const searchFile = async () => {
+  const checkAddress = async () => {
     try {
-      const { data } = await axios.get(
-        "http://localhost:8000/file?input=" + input
+      const backendResponse = await axios.post(
+        `http://${backendAddress}/check`
       );
-      setResults(data);
+      const serverResponse = await axios.post(`http://${serverAddress}/check`);
+      if (backendResponse.status === 204 && serverResponse.status === 204) {
+        setConnected(true);
+      } else {
+        toast({
+          title: "Error",
+          description: "Couldn't connect. Please try again.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
     } catch (e) {
       toast({
         title: "Error",
@@ -59,130 +47,44 @@ function App() {
     }
   };
 
-  const submitFile = async (file) => {
-    try {
-      const { data } = await axios.post("http://localhost:8080/files", {
-        file,
-      });
-      setFiles(data);
-      onClose();
-    } catch (e) {
-      console.log(e);
-      toast({
-        title: "Error",
-        description: "",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
-
-  const getFiles = async () => {
-    try {
-      const { data } = await axios.get("http://localhost:8080/files");
-      setFiles(data);
-    } catch (e) {
-      toast({
-        title: "Error",
-        description: "",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
-
-  useEffect(() => {
-    getFiles();
-  }, []);
-
   return (
     <>
-      <Box m={4}>
-        <Heading size="lg">Files being shared</Heading>
-        <Flex direction="row" justify="flex-start" align="center">
-          <Button colorScheme="teal" onClick={onOpen}>
-            Select file
-          </Button>
-        </Flex>
-
-        <TableContainer>
-          <Table size="sm" variant="striped">
-            <Thead>
-              <Tr>
-                <Th>File</Th>
-                <Th>Size</Th>
-                <Th>Blocks</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {files.map((item, idx) => (
-                <Tr key={`file-${idx}`}>
-                  <Td>{item.filename}</Td>
-                  <Td>{item.size}</Td>
-                  <Td>{item.blocks}</Td>
-                </Tr>
-              ))}
-            </Tbody>
-          </Table>
-        </TableContainer>
-        <FormControl>
-          <FormLabel>Search for a file</FormLabel>
-          <Input
-            placeholder="File name"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
+      {connected === null ? (
+        <Box h="100vh">
+          <AbsoluteCenter p="4" axis="both">
+            <FormControl>
+              <FormLabel>Enter the backend address:</FormLabel>
+              <Input
+                type="text"
+                value={backendAddress}
+                onChange={(e) => setBackendAddress(e.target.value)}
+              />
+            </FormControl>
+            <FormControl>
+              <FormLabel>Enter the index server address:</FormLabel>
+              <Input
+                type="text"
+                value={serverAddress}
+                onChange={(e) => setServerAddress(e.target.value)}
+              />
+            </FormControl>
+            <Button colorScheme="teal" m={4} w="80%" onClick={checkAddress}>
+              Accept
+            </Button>
+          </AbsoluteCenter>
+        </Box>
+      ) : (
+        <Box m={4}>
+          <LocalFiles
+            backendAddress={backendAddress}
+            serverAddress={serverAddress}
           />
-        </FormControl>
-        <Button
-          type="button"
-          mt={4}
-          colorScheme="teal"
-          isLoading={false}
-          onClick={searchFile}
-        >
-          Search
-        </Button>
-        <Card>
-          <CardHeader>
-            <Heading size="md">Search results</Heading>
-          </CardHeader>
-
-          <CardBody>
-            <Stack divider={<StackDivider />} spacing="4">
-              {results.map((item, idx) => (
-                <Box key={`result-${idx}`}>
-                  <Heading size="md" textTransform="uppercase">
-                    {item.filename}
-                  </Heading>
-                  <StatGroup>
-                    <Stat>
-                      <StatLabel>Clients sharing</StatLabel>
-                      <StatNumber>{item.clients.length}</StatNumber>
-                    </Stat>
-                    <Stat>
-                      <StatLabel>Size</StatLabel>
-                      <StatNumber>{item.size}</StatNumber>
-                    </Stat>
-                    <Stat>
-                      <StatLabel>Number of blocks</StatLabel>
-                      <StatNumber>{item.blocks}</StatNumber>
-                    </Stat>
-                    <IconButton
-                      aria-label="download"
-                      colorScheme="teal"
-                      size="lg"
-                      icon={<BsDownload />}
-                    />
-                  </StatGroup>
-                </Box>
-              ))}
-            </Stack>
-          </CardBody>
-        </Card>
-      </Box>
-      <FilePicker isOpen={isOpen} onClose={onClose} submitFile={submitFile} />
+          <ExternalFiles
+            serverAddress={serverAddress}
+            backendAddress={backendAddress}
+          />
+        </Box>
+      )}
     </>
   );
 }

@@ -14,10 +14,16 @@ def file():
         user_input = request.args.get('input', '')
         return jsonify(file_search(user_input))
     elif request.method == 'POST':
+        user_address = request.environ['REMOTE_ADDR']
         file_shared = request.json
-        return jsonify(index_file(file_shared)), 204
+        return jsonify(index_file(file_shared, user_address)), 204
     else:
         return "", 404
+
+
+@app.route("/check", methods=['POST'])
+def check():
+    return "", 204
 
 
 if __name__ == "__main__":
