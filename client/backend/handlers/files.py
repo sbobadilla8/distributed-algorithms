@@ -54,6 +54,4 @@ class Files:
 
     def get_update(self, file):
         value = self.managers[file].get_download_progress()
-        print(".....................")
-        print(value)
         return {"value": value}

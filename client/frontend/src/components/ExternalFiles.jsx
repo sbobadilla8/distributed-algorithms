@@ -21,6 +21,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { BsDownload } from "react-icons/bs";
+import FileCard from "./FileCard.jsx";
 
 const ExternalFiles = ({ serverAddress, backendAddress }) => {
   const toast = useToast();
@@ -33,41 +34,7 @@ const ExternalFiles = ({ serverAddress, backendAddress }) => {
       const { data } = await axios.get(
         `http://${serverAddress}/file?input=${input}`
       );
-      setResults(data);
-    } catch (e) {
-      toast({
-        title: "Error",
-        description: "Something went wrong.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
-
-  const startDownload = async (item) => {
-    try {
-      const response = await axios.post(`http://${backendAddress}/download`, {
-        filename: item.filename,
-        size: item.size,
-        clients: item.clients,
-      });
-      let flag = false;
-      let intervalId = setInterval(async () => {
-        const { data } = await axios.get(
-          `http://${backendAddress}/download?filename=${item.filename}`
-        );
-        const progress = data.value;
-        if (parseFloat(progress) < 1.0) {
-          console.log(progress);
-        } else {
-          flag = true;
-        }
-      }, 1000);
-      if (flag) {
-        console.log(1);
-        clearInterval(intervalId);
-      }
+      setResults(data.map((item) => ({ ...item, progress: 0 })));
     } catch (e) {
       toast({
         title: "Error",
@@ -105,34 +72,13 @@ const ExternalFiles = ({ serverAddress, backendAddress }) => {
 
         <CardBody>
           <Stack divider={<StackDivider />} spacing="4">
-            {results.map((item, idx) => (
-              <Box key={`result-${idx}`}>
-                <Heading size="md" textTransform="uppercase">
-                  {item.filename}
-                </Heading>
-                <StatGroup>
-                  <Stat>
-                    <StatLabel>Clients sharing</StatLabel>
-                    <StatNumber>{item.clients.length}</StatNumber>
-                  </Stat>
-                  <Stat>
-                    <StatLabel>Size</StatLabel>
-                    <StatNumber>{item.size}</StatNumber>
-                  </Stat>
-                  <Stat>
-                    <StatLabel>Number of blocks</StatLabel>
-                    <StatNumber>{item.blocks}</StatNumber>
-                  </Stat>
-                  <IconButton
-                    aria-label="download"
-                    colorScheme="teal"
-                    size="lg"
-                    onClick={() => startDownload(item)}
-                    icon={<BsDownload />}
-                  />
-                </StatGroup>
-                <Progress value={80} />
-              </Box>
+            {results.map((item) => (
+              <FileCard
+                key={item.filename}
+                item={item}
+                setResults={setResults}
+                backendAddress={backendAddress}
+              />
             ))}
           </Stack>
         </CardBody>
