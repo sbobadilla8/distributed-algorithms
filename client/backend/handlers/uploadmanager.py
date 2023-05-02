@@ -11,9 +11,13 @@ class FileUploadManager:
         self.host = host
         self.port = port
         self.fileToUpload = {}
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.bind((host, port))
-        self.socket.listen()
+        try:
+            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.socket.bind((self.host, self.port))
+            self.socket.listen()
+        except OSError:
+            print("TCP Server already running on port {}".format(self.port))
+            return
         self.fileMgrMutex = threading.Lock()
         print("UploadManager::__init__::Listening for connections ...")
         thread = None
