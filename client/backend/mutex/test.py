@@ -1,4 +1,4 @@
-from mutex import HemlockThread, Lock
+from hemlock import HemlockThread, Lock
 from time import sleep
 
 # mutex = Lock()
