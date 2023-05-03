@@ -1,6 +1,6 @@
 import threading
 import socket
-import pickle as rick
+import _pickle as rick
 import random
 from collections import deque
 from .filemgr import FileMgr
@@ -59,8 +59,8 @@ class FileDownloadManager:
         block_threads = []
         for threadIndex in range(0, max_threads):
             thread = threading.Thread(target=self.request_blocks_from_peer, args=[self.connected_peers[threadIndex]])
-            thread.start()
             block_threads.append(thread)
+            thread.start()
 
         for thread in block_threads:
             thread.join()
@@ -69,9 +69,12 @@ class FileDownloadManager:
 
         # Close all connected peers
         print("DownloadManager::initiate_download::Closing all peers ...")
+        closingThreads = []
         for connectedPeer in self.connected_peers:
             thread = threading.Thread(target=self.close_peer_connection, args=[connectedPeer])
+            closingThreads.append(thread)
             thread.start()
+        for thread in closingThreads:
             thread.join()
 
     def create_download_file(self):
@@ -98,6 +101,7 @@ class FileDownloadManager:
             self.blockIndexMutex.acquire()
             if len(self.block_indices) == 0:
                 self.blockIndexMutex.release()
+                self.file_to_download.close_file()
                 break
             block_index = self.block_indices.popleft()
             self.blockIndexMutex.release()
@@ -130,5 +134,7 @@ class FileDownloadManager:
         remaining_blocks = len(self.block_indices)
         self.blockIndexMutex.release()
         total_blocks = self.file_to_download.get_file_block_size()
+        if(total_blocks == 0):
+            return 0.0
         progress = (total_blocks - remaining_blocks) / total_blocks
         return progress
