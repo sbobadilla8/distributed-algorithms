@@ -13,11 +13,8 @@ import {
 import LocalFiles from "./components/LocalFiles.jsx";
 import ExternalFiles from "./components/ExternalFiles.jsx";
 
-function App() {
+function App({ serverAddress, backendAddress }) {
   const toast = useToast();
-  const [backendAddress, setBackendAddress] = useState("");
-  const [serverAddress, setServerAddress] = useState("");
-  const [connected, setConnected] = useState(null);
 
   const checkAddress = async () => {
     try {
@@ -49,42 +46,16 @@ function App() {
 
   return (
     <>
-      {connected === null ? (
-        <Box h="100vh">
-          <AbsoluteCenter p="4" axis="both">
-            <FormControl>
-              <FormLabel>Enter the backend address:</FormLabel>
-              <Input
-                type="text"
-                value={backendAddress}
-                onChange={(e) => setBackendAddress(e.target.value)}
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>Enter the index server address:</FormLabel>
-              <Input
-                type="text"
-                value={serverAddress}
-                onChange={(e) => setServerAddress(e.target.value)}
-              />
-            </FormControl>
-            <Button colorScheme="teal" m={4} w="80%" onClick={checkAddress}>
-              Accept
-            </Button>
-          </AbsoluteCenter>
-        </Box>
-      ) : (
-        <Box m={4}>
-          <LocalFiles
-            backendAddress={backendAddress}
-            serverAddress={serverAddress}
-          />
-          <ExternalFiles
-            serverAddress={serverAddress}
-            backendAddress={backendAddress}
-          />
-        </Box>
-      )}
+      <Box m={4}>
+        <LocalFiles
+          backendAddress={backendAddress}
+          serverAddress={serverAddress}
+        />
+        <ExternalFiles
+          serverAddress={serverAddress}
+          backendAddress={backendAddress}
+        />
+      </Box>
     </>
   );
 }

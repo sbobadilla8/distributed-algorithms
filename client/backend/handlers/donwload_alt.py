@@ -37,7 +37,7 @@ class FileDownloadManagerAlt:
 
         # Request Connection to all available peers which respond all get stored in connected_peers
         print("DownloadManager::initiate_download::Connecting to peers ...")
-        max_threads = 12
+        max_threads = 4
         connection_threads = []
         for threadIndex in range(0, max_threads):
             thread = HemlockThread(target=self.request_peer_connection,
