@@ -2,6 +2,8 @@ import requests
 import threading
 from .filemgr import FileMgr
 from .downloadmanager import FileDownloadManager
+from .donwload_alt import FileDownloadManagerAlt
+from .mutex.hemlock import HemlockThread
 
 """
 file structure:
@@ -46,9 +48,11 @@ class Files:
         return self.files
 
     def download_file(self, file):
-        download_manager = FileDownloadManager(file['filename'], file['size'], file['clients'])
+        # download_manager = FileDownloadManager(file['filename'], file['size'], file['clients'])
+        download_manager = FileDownloadManagerAlt(file['filename'], file['size'], file['clients'])
         self.managers[file['filename']] = download_manager
-        thread = threading.Thread(target=download_manager.initiate_download)
+        # thread = threading.Thread(target=download_manager.initiate_download)
+        thread = HemlockThread(target=download_manager.initiate_download, args=())
         thread.start()
         return ""
 

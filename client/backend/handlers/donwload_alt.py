@@ -1,9 +1,9 @@
-import threading
 import socket
 import pickle as rick
 import random
 from collections import deque
 from .filemgr import FileMgr
+from .mutex.hemlock import HemlockThread, Lock
 
 
 def send_message(connection, data):
@@ -18,7 +18,7 @@ def read_message(connection):
     return message
 
 
-class FileDownloadManager:
+class FileDownloadManagerAlt:
     def __init__(self, file_name, file_size, peers):
         self.connected_peers = []
         self.file_name = file_name
@@ -26,29 +26,29 @@ class FileDownloadManager:
         self.peers = peers
         self.block_indices = None
         self.file_to_download = None
-        self.peerConnectionMutex = threading.Lock()
-        self.fileWriteMutex = threading.Lock()
-        self.blockIndexMutex = threading.Lock()
+        self.peerConnectionMutex = Lock()
+        self.fileWriteMutex = Lock()
+        self.blockIndexMutex = Lock()
 
     def initiate_download(self):
         # Create FileMgr object with given size
-        filemgr_thread = threading.Thread(target=self.create_download_file)
-        filemgr_thread.start()
+        file_thread = HemlockThread(target=self.create_download_file, args=())
+        file_thread.start()
 
         # Request Connection to all available peers which respond all get stored in connected_peers
         print("DownloadManager::initiate_download::Connecting to peers ...")
         max_threads = 12
         connection_threads = []
         for threadIndex in range(0, max_threads):
-            thread = threading.Thread(target=self.request_peer_connection,
-                                     args=[self.peers[threadIndex % len(self.peers)]])
+            thread = HemlockThread(target=self.request_peer_connection,
+                                   args=[self.peers[threadIndex % len(self.peers)]])
             thread.start()
             connection_threads.append(thread)
 
         for thread in connection_threads:
             thread.join()
 
-        filemgr_thread.join()
+        file_thread.join()
 
         # Get indices of blocks to download
         self.block_indices = deque(list(range(0, self.file_to_download.get_file_block_size())))
@@ -58,7 +58,8 @@ class FileDownloadManager:
         print("DownloadManager::initiate_download::Downloading file blocks ...")
         block_threads = []
         for threadIndex in range(0, max_threads):
-            thread = threading.Thread(target=self.request_blocks_from_peer, args=[self.connected_peers[threadIndex]])
+            thread = HemlockThread(target=self.request_blocks_from_peer,
+                                   args=[self.connected_peers[threadIndex]])
             thread.start()
             block_threads.append(thread)
 
@@ -70,7 +71,7 @@ class FileDownloadManager:
         # Close all connected peers
         print("DownloadManager::initiate_download::Closing all peers ...")
         for connectedPeer in self.connected_peers:
-            thread = threading.Thread(target=self.close_peer_connection, args=[connectedPeer])
+            thread = HemlockThread(target=self.close_peer_connection, args=[connectedPeer])
             thread.start()
             thread.join()
 
@@ -86,21 +87,21 @@ class FileDownloadManager:
                                       'payload': {'file_name': self.file_name}})
         message = read_message(connected_peer)
         if message['result'] == 'ACK':
-            self.peerConnectionMutex.acquire()
+            self.peerConnectionMutex.lock()
             try:
                 self.connected_peers.append(connected_peer)
             finally:
-                self.peerConnectionMutex.release()
+                self.peerConnectionMutex.unlock()
 
     def request_blocks_from_peer(self, connected_peer):
         while True:
             # Get block_index from the queue in a thread safe manner
-            self.blockIndexMutex.acquire()
+            self.blockIndexMutex.lock()
             if len(self.block_indices) == 0:
-                self.blockIndexMutex.release()
+                self.blockIndexMutex.unlock()
                 break
             block_index = self.block_indices.popleft()
-            self.blockIndexMutex.release()
+            self.blockIndexMutex.unlock()
             # Request block from the connectedPeer
             # print("DownloadManager::request_blocks_from_peer::Requesting block
             # {} from {}".format(block_index, connectedPeer.getpeername()))
@@ -112,9 +113,9 @@ class FileDownloadManager:
                 # print("DownloadManager::request_blocks_from_peer::Received block {} from {}".format(block_index,
                 # connectedPeer.getpeername()))
                 block = message['result']['block']
-                self.fileWriteMutex.acquire()
+                self.fileWriteMutex.lock()
                 self.file_to_download.write_block(block, block_index)
-                self.fileWriteMutex.release()
+                self.fileWriteMutex.unlock()
                 # print("DownloadManager::request_blocks_from_peer::Finished writing block {} to file".format(
                 # block_index))
 
@@ -126,9 +127,10 @@ class FileDownloadManager:
     def get_download_progress(self):
         if self.block_indices is None:
             return 0.0
-        self.blockIndexMutex.acquire()
+        self.blockIndexMutex.lock()
         remaining_blocks = len(self.block_indices)
-        self.blockIndexMutex.release()
+        print(f"Remaining blocks: {remaining_blocks}")
+        self.blockIndexMutex.unlock()
         total_blocks = self.file_to_download.get_file_block_size()
         progress = (total_blocks - remaining_blocks) / total_blocks
         return progress
