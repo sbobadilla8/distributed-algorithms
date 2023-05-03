@@ -1,44 +1,40 @@
-from mutex import HemlockThread, Lock, lock, unlock
+from mutex import HemlockThread, Lock
 from time import sleep
 
 # mutex = Lock()
 l1 = Lock()
 
 
-def increase(var, h):
+def increase(var):
     for i in range(10):
         # mutex.acquire()
-        lock(l1, hemlocks[h])
+        # l1.lock(hemlocks[h])
+        # l1.lock(hemlocks[h])
+        l1.lock()
+        # lock(l1, hemlocks[h])
         temp = var['value']
         # print(temp)
         sleep(0.001)
         var['value'] = temp + 1
-        unlock(l1, hemlocks[h])
+        # unlock(l1, hemlocks[h])
+        # l1.unlock(hemlocks[h])
+        l1.unlock()
         # mutex.release()
 
 
 count = {"value": 0}
-hemlocks = []
-h1 = HemlockThread(target=increase, args=[count, 0])
-h2 = HemlockThread(target=increase, args=[count, 1])
-h3 = HemlockThread(target=increase, args=[count, 2])
-h4 = HemlockThread(target=increase, args=[count, 3])
-hemlocks.append(h1)
-hemlocks.append(h2)
-hemlocks.append(h3)
-hemlocks.append(h4)
-thread1 = h1.get_thread()
-thread2 = h2.get_thread()
-thread3 = h3.get_thread()
-thread4 = h4.get_thread()
-thread1.start()
-thread2.start()
-thread3.start()
-thread4.start()
-thread1.join()
-thread2.join()
-thread3.join()
-thread4.join()
+h1 = HemlockThread(target=increase, args=[count])
+h2 = HemlockThread(target=increase, args=[count])
+h3 = HemlockThread(target=increase, args=[count])
+h4 = HemlockThread(target=increase, args=[count])
+h1.start()
+h2.start()
+h3.start()
+h4.start()
+h1.join()
+h2.join()
+h3.join()
+h4.join()
 # t1 = Thread(target=increase, args=[count])
 # t2 = Thread(target=increase, args=[count])
 # t1.start()
