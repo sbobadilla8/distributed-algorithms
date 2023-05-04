@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import axios from "axios";
 import {
   Box,
   Heading,
@@ -11,7 +12,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { BsDownload } from "react-icons/bs";
-import axios from "axios";
+import { humanFileSize } from "../utils/fileSize.js";
 
 const FileCard = ({ item, setResults, backendAddress }) => {
   const toast = useToast();
@@ -19,7 +20,7 @@ const FileCard = ({ item, setResults, backendAddress }) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const startDownload = async (item) => {
     try {
-      const response = await axios.post(`http://${backendAddress}/download`, {
+      await axios.post(`http://${backendAddress}/download`, {
         filename: item.filename,
         size: item.size,
         clients: item.clients,
@@ -72,7 +73,7 @@ const FileCard = ({ item, setResults, backendAddress }) => {
         </Stat>
         <Stat>
           <StatLabel>Size</StatLabel>
-          <StatNumber>{item.size}</StatNumber>
+          <StatNumber>{humanFileSize(item.size)}</StatNumber>
         </Stat>
         <Stat>
           <StatLabel>Number of blocks</StatLabel>

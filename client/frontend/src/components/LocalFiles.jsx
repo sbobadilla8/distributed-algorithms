@@ -15,6 +15,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import FilePicker from "./FilePicker.jsx";
+import { humanFileSize } from "../utils/fileSize.js";
 
 const LocalFiles = ({ backendAddress, serverAddress }) => {
   const toast = useToast();
@@ -31,7 +32,6 @@ const LocalFiles = ({ backendAddress, serverAddress }) => {
       setFiles(data);
       onClose();
     } catch (e) {
-      console.log(e);
       toast({
         title: "Error",
         description: "",
@@ -63,7 +63,9 @@ const LocalFiles = ({ backendAddress, serverAddress }) => {
 
   return (
     <>
-      <Heading size="lg">Files being shared</Heading>
+      <Flex direction="row" justify="center">
+        <Heading size="lg">Files being shared</Heading>
+      </Flex>
       <Flex direction="row" justify="flex-start" align="center">
         <Button colorScheme="teal" onClick={onOpen}>
           Select file
@@ -83,7 +85,7 @@ const LocalFiles = ({ backendAddress, serverAddress }) => {
             {files.map((item, idx) => (
               <Tr key={`file-${idx}`}>
                 <Td>{item.filename}</Td>
-                <Td>{item.size}</Td>
+                <Td>{humanFileSize(item.size)}</Td>
                 <Td>{item.blocks}</Td>
               </Tr>
             ))}
