@@ -6,7 +6,14 @@ import App from "./App.jsx";
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ChakraProvider>
-      <App />
+      <App
+        serverAddress={document
+          .getElementById("content")
+          .getAttribute("server-address")}
+        backendAddress={document
+          .getElementById("content")
+          .getAttribute("backend-address")}
+      />
     </ChakraProvider>
   </React.StrictMode>
 );

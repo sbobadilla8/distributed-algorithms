@@ -1,4 +1,4 @@
-from threading import Thread, get_ident, current_thread
+from threading import Thread, current_thread
 
 
 class HemlockThread(Thread):

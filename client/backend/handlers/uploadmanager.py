@@ -36,42 +36,44 @@ class FileUploadManager:
                 break
 
     def handle_connection(self, connection, address):
-        closeConnection = False
-        while not closeConnection:
+        close_connection = False
+        while not close_connection:
             message = self.read_message(connection)
             # print("UploadManager::handle_connection::Message Received: {}".format(message))
             # closeConnection = self.handle_incoming_data(connection, message)
             if message:
                 action = message['action']
                 if action == 'Request_Download':
-                    fileName = message['payload']['file_name']
-                    print("UploadManager::handle_connection::Client requests download of {}".format(fileName))
+                    file_name = message['payload']['file_name']
+                    print("UploadManager::handle_connection::Client requests download of {}".format(file_name))
                     # Open File Manager
                     self.fileMgrMutex.acquire()
                     # print("UploadManager::handle_connection::fileToUpload = {}".format(self.fileToUpload))
-                    if (fileName not in self.fileToUpload.keys()):
-                        self.fileToUpload[fileName] = FileMgr(fileName)
-                        print("UploadManager::handle_connection::{} successfully opened".format(fileName))
+                    if file_name not in self.fileToUpload.keys():
+                        self.fileToUpload[file_name] = FileMgr(file_name)
+                        print("UploadManager::handle_connection::{} successfully opened".format(file_name))
                     else:
-                        print("UploadManager::handle_connection::{} already opened".format(fileName))
+                        print("UploadManager::handle_connection::{} already opened".format(file_name))
                     self.fileMgrMutex.release()
-                    dataToSend = {'result': 'ACK'}
-                    self.send_message(connection, dataToSend)
+                    data_to_send = {'result': 'ACK'}
+                    self.send_message(connection, data_to_send)
                 if action == 'Request_Block':
-                    blockIndex = message['payload']['block_index']
-                    fileName = message['payload']['file_name']
-                    # print("UploadManager::handle_connection::Client requests upload of block index: {}".format(blockIndex))
-                    blockToSend = self.fileToUpload[fileName].get_block(blockIndex)
-                    dataToSend = {'result': {'block': blockToSend}}
+                    block_index = message['payload']['block_index']
+                    file_name = message['payload']['file_name']
+                    # print("UploadManager::handle_connection::Client requests upload of block index: {}".format(
+                    # blockIndex))
+                    block_to_send = self.fileToUpload[file_name].get_block(block_index)
+                    data_to_send = {'result': {'block': block_to_send}}
                     # print("UploadManager::handle_connection::Sending block {}".format(blockIndex))
-                    self.send_message(connection, dataToSend)
+                    self.send_message(connection, data_to_send)
                 if action == 'Close_Connection':
-                    fileName = message['payload']['file_name']
+                    file_name = message['payload']['file_name']
                     self.fileMgrMutex.acquire()
-                    if (fileName in self.fileToUpload.keys()):
-                        del self.fileToUpload[fileName]
+                    if file_name in self.fileToUpload.keys():
+                        self.fileToUpload[file_name].close_file()
+                        del self.fileToUpload[file_name]
                     self.fileMgrMutex.release()
-                    closeConnection = True
+                    close_connection = True
         print("UploadManager::handle_connection::Closing connection {} ...".format(address))
         connection.close()
 
