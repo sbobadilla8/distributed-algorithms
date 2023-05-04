@@ -1,4 +1,4 @@
-from threading import Thread, get_ident, current_thread, Condition
+from threading import Thread, current_thread
 
 
 class HemlockThread(Thread):
@@ -16,7 +16,6 @@ class Lock:
     def __init__(self):
         # Initial value: None
         self.tail = None
-        self.condition = Condition()
 
     def lock(self):
         hemlock_thread = current_thread()
