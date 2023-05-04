@@ -58,9 +58,9 @@ class FileMgr:
         self.file_descr.seek(0)
         self.file_descr.write(b'\0'*self.file_size)
 
-    def __del__(self):
-        print("Closing {} . . .".format(self.file_name))
-        self.file_descr.close()
+    # def __del__(self):
+    #     print("Closing {} . . .".format(self.file_name))
+    #     self.file_descr.close()
 
 # Working Example ###
 # from random import shuffle

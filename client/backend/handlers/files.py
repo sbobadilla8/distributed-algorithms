@@ -2,8 +2,6 @@ import requests
 import threading
 from .filemgr import FileMgr
 from .downloadmanager import FileDownloadManager
-from .donwload_alt import FileDownloadManagerAlt
-from .mutex.hemlock import HemlockThread
 
 """
 file structure:
