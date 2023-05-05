@@ -10,7 +10,7 @@ from handlers.uploadmanager import FileUploadManager
 import mimetypes
 
 app = Flask(__name__, template_folder='dist', static_folder='dist', static_url_path='/')
-cors = CORS(app)
+# cors = CORS(app, origins=['http://localhost'])
 port_tcp = 0
 
 files = None
@@ -96,5 +96,5 @@ if __name__ == "__main__":
     thread = threading.Thread(target=create_listener, args=[port_tcp])
     thread.daemon = True
     thread.start()
-
+    cors = CORS(app, origins=['http://localhost:'+str(port_web)])
     app.run(host="0.0.0.0", port=port_web, debug=True)
