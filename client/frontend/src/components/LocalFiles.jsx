@@ -4,6 +4,7 @@ import {
   Button,
   Flex,
   Heading,
+  IconButton,
   Table,
   TableContainer,
   Tbody,
@@ -16,6 +17,7 @@ import {
 } from "@chakra-ui/react";
 import FilePicker from "./FilePicker.jsx";
 import { humanFileSize } from "../utils/fileSize.js";
+import { BsXCircle } from "react-icons/bs";
 
 const LocalFiles = ({ backendAddress, serverAddress }) => {
   const toast = useToast();
@@ -31,6 +33,19 @@ const LocalFiles = ({ backendAddress, serverAddress }) => {
       });
       setFiles(data);
       onClose();
+    } catch (e) {
+      toast({
+        title: "Error",
+        description: "",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const stopShare = async (file) => {
+    try {
     } catch (e) {
       toast({
         title: "Error",
@@ -87,6 +102,13 @@ const LocalFiles = ({ backendAddress, serverAddress }) => {
                 <Td>{item.filename}</Td>
                 <Td>{humanFileSize(item.size)}</Td>
                 <Td>{item.blocks}</Td>
+                <IconButton
+                  aria-label="remove"
+                  colorScheme="red"
+                  size="sm"
+                  onClick={() => stopShare(item)}
+                  icon={<BsXCircle />}
+                />
               </Tr>
             ))}
           </Tbody>

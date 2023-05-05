@@ -66,15 +66,7 @@ class FileDownloadManager:
 
         for thread in block_threads:
             thread.join()
-
-        self.download_progress = "Verifying"
-        downloaded_file_checksum = self.file_to_download.get_md5_hash()
-        if(downloaded_file_checksum == self.file_checksum):
-            print("File checksum verification completed.")
-            self.download_progress = "Completed"
-        else:
-            print("File checksum verification failed. Please retry the download.")
-            self.download_progress = "File Verification Failed"
+        self.download_progress = "Completed"
 
         # Close all connected peers
         print("DownloadManager::initiate_download::Closing all peers ...")
