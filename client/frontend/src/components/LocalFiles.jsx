@@ -4,6 +4,7 @@ import {
   Button,
   Flex,
   Heading,
+  IconButton,
   Table,
   TableContainer,
   Tbody,
@@ -15,6 +16,8 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import FilePicker from "./FilePicker.jsx";
+import { humanFileSize } from "../utils/fileSize.js";
+import { BsXCircle } from "react-icons/bs";
 
 const LocalFiles = ({ backendAddress, serverAddress }) => {
   const toast = useToast();
@@ -31,10 +34,26 @@ const LocalFiles = ({ backendAddress, serverAddress }) => {
       setFiles(data);
       onClose();
     } catch (e) {
-      console.log(e);
       toast({
         title: "Error",
-        description: "",
+        description: "Error sharing file",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const stopShare = async (file) => {
+    try {
+      const { data } = await axios.delete(
+        `http://${backendAddress}/files?filename=${file.filename}&server=${serverAddress}`
+      );
+      setFiles(data);
+    } catch (e) {
+      toast({
+        title: "Error",
+        description: "Error dropping share.",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -63,7 +82,9 @@ const LocalFiles = ({ backendAddress, serverAddress }) => {
 
   return (
     <>
-      <Heading size="lg">Files being shared</Heading>
+      <Flex direction="row" justify="center">
+        <Heading size="lg">Files being shared</Heading>
+      </Flex>
       <Flex direction="row" justify="flex-start" align="center">
         <Button colorScheme="teal" onClick={onOpen}>
           Select file
@@ -83,8 +104,15 @@ const LocalFiles = ({ backendAddress, serverAddress }) => {
             {files.map((item, idx) => (
               <Tr key={`file-${idx}`}>
                 <Td>{item.filename}</Td>
-                <Td>{item.size}</Td>
+                <Td>{humanFileSize(item.size)}</Td>
                 <Td>{item.blocks}</Td>
+                <IconButton
+                  aria-label="remove"
+                  colorScheme="red"
+                  size="sm"
+                  onClick={() => stopShare(item)}
+                  icon={<BsXCircle />}
+                />
               </Tr>
             ))}
           </Tbody>

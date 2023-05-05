@@ -1,26 +1,18 @@
 import { useState } from "react";
 import axios from "axios";
 import {
-  Box,
   Button,
   Card,
   CardBody,
   CardHeader,
-  FormControl,
-  FormLabel,
+  Flex,
   Heading,
-  IconButton,
   Input,
-  Progress,
   Stack,
   StackDivider,
-  Stat,
-  StatGroup,
-  StatLabel,
-  StatNumber,
   useToast,
 } from "@chakra-ui/react";
-import { BsDownload } from "react-icons/bs";
+
 import FileCard from "./FileCard.jsx";
 
 const ExternalFiles = ({ serverAddress, backendAddress }) => {
@@ -34,7 +26,7 @@ const ExternalFiles = ({ serverAddress, backendAddress }) => {
       const { data } = await axios.get(
         `http://${serverAddress}/file?input=${input}`
       );
-      setResults(data.map((item) => ({ ...item, progress: 0 })));
+      setResults(data.map((item) => ({ ...item, progress: 0, status: "" })));
     } catch (e) {
       toast({
         title: "Error",
@@ -48,23 +40,24 @@ const ExternalFiles = ({ serverAddress, backendAddress }) => {
 
   return (
     <>
-      <FormControl>
-        <FormLabel>Search for a file</FormLabel>
+      <Flex direction="row" justify="center">
+        <Heading size="lg">Search for a file</Heading>
+      </Flex>
+      <Flex direction="row" align="center" gap={4} m={4}>
         <Input
           placeholder="File name"
           value={input}
           onChange={(e) => setInput(e.target.value)}
         />
-      </FormControl>
-      <Button
-        type="button"
-        mt={4}
-        colorScheme="teal"
-        isLoading={false}
-        onClick={searchFile}
-      >
-        Search
-      </Button>
+        <Button
+          type="button"
+          colorScheme="teal"
+          isLoading={false}
+          onClick={searchFile}
+        >
+          Search
+        </Button>
+      </Flex>
       <Card>
         <CardHeader>
           <Heading size="md">Search results</Heading>

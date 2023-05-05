@@ -41,17 +41,19 @@ class Files:
 
     def remove_file(self, file):
         for item in self.files:
-            if item.name == file.name:
-                self.files.remove(file)
+            if item['filename'] == file['filename']:
+                self.files.remove(item)
+                r = requests.delete('http://' + file['serverAddress'] + '/file',
+                                    json={'filename': file['filename']})
         return self.files
 
     def download_file(self, file):
-        download_manager = FileDownloadManager(file['filename'], file['size'], file['clients'])
+        download_manager = FileDownloadManager(file['filename'], file['size'], file['clients'], file['checksum'])
         self.managers[file['filename']] = download_manager
         thread = threading.Thread(target=download_manager.initiate_download)
         thread.start()
         return ""
 
     def get_update(self, file):
-        value = self.managers[file].get_download_progress()
-        return {"value": value}
+        status, value = self.managers[file].get_download_progress()
+        return {"status": status, "value": value}

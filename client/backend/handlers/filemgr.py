@@ -10,18 +10,14 @@ class FileMgr:
         self.block_size = 4 * 1024
         self.file_name = file_name
 
-        if (file_size is not None):
-            Path(self.file_name).touch()
-            self.file_descr = open(self.file_name, "r+b")
-            self.file_size = file_size
-            self.__write_file()
-            self.file_descr.close()
-            Path(self.file_name).touch()
-            self.file_descr = open(self.file_name, "r+b")
-            self.__write_file()
-
+        if file_size is not None:
+            with open(self.file_name, "wb+") as f:
+                f.seek(file_size-1)
+                f.write(b'\0')
+                f.close()
+            self.file_descr = open(self.file_name, "rb+")
         else:
-            self.file_descr = open(self.file_name, "r+b")
+            self.file_descr = open(self.file_name, "rb+")
             self.file_size = self.get_file_bytes_size()
 
     # Get block at specified index
@@ -44,9 +40,13 @@ class FileMgr:
         start_pos = block_index * self.block_size
         self.file_descr.seek(start_pos)
         self.file_descr.write(block)
+        self.file_descr.flush()
 
-    # Generate MD5 hash of the file
-    def get_md5_hash(self):
+    # Generate MD5 hash of a given block.
+    # If block is not provided, generates the hash value of the file.
+    def get_md5_hash(self, block=None):
+        if(block is not None):
+            return hashlib.md5(block).hexdigest()
         self.file_descr.seek(0)
         return hashlib.md5(self.file_descr.read()).hexdigest()
     
@@ -57,31 +57,5 @@ class FileMgr:
     def __write_file(self):
         self.file_descr.seek(0)
         self.file_descr.write(b'\0'*self.file_size)
+        self.file_descr.flush()
 
-    # def __del__(self):
-    #     print("Closing {} . . .".format(self.file_name))
-    #     self.file_descr.close()
-
-# Working Example ###
-# from random import shuffle
-
-# # Open file to copy
-# fileToCopy = FileMgr("hello.txt")
-# fileSize = fileToCopy.get_file_bytes_size()
-# print(f"fileName: {fileToCopy}, fileSize: {fileSize}")
-# # Create new file of same length
-# fileToWrite = FileMgr("downloads/hello.txt", fileSize)
-# fileSize = fileToWrite.get_file_bytes_size()
-# print(f"fileName: {fileToCopy}, fileSize: {fileSize}")
-# # Create a shuffled list of block indices (How a P2P algorithm will work)
-# new_block_indices = list( range(0, fileSize))
-# shuffle(new_block_indices)
-
-# # Write the random blocks to the new file
-# for block_index in new_block_indices:
-#     block = fileToCopy.get_block(block_index)
-#     # print(block)
-#     fileToWrite.write_block(block, block_index)
-
-# # Check if both hash values match, if so the copying is done
-# print(fileToCopy.get_md5_hash(), fileToWrite.get_md5_hash())

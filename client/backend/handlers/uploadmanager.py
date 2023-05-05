@@ -1,4 +1,3 @@
-# import argparse
 import socket
 import threading
 from .filemgr import FileMgr
@@ -40,7 +39,6 @@ class FileUploadManager:
         while not close_connection:
             message = self.read_message(connection)
             # print("UploadManager::handle_connection::Message Received: {}".format(message))
-            # closeConnection = self.handle_incoming_data(connection, message)
             if message:
                 action = message['action']
                 if action == 'Request_Download':
@@ -63,7 +61,8 @@ class FileUploadManager:
                     # print("UploadManager::handle_connection::Client requests upload of block index: {}".format(
                     # blockIndex))
                     block_to_send = self.fileToUpload[file_name].get_block(block_index)
-                    data_to_send = {'result': {'block': block_to_send}}
+                    block_checksum = self.fileToUpload[file_name].get_md5_hash(block_to_send)
+                    data_to_send = {'result': {'block': block_to_send, 'block_checksum': block_checksum}}
                     # print("UploadManager::handle_connection::Sending block {}".format(blockIndex))
                     self.send_message(connection, data_to_send)
                 if action == 'Close_Connection':
@@ -84,10 +83,3 @@ class FileUploadManager:
         data = connection.recv(32 * 1024)
         message = rick.loads(data)
         return message
-
-# threading.Thread(target=FileUploadManager, args=['127.0.0.1', 6000]).start()
-# threading.Thread(target=FileUploadManager, args=['127.0.0.1', 6001]).start()
-# threading.Thread(target=FileUploadManager, args=['127.0.0.1', 6002]).start()
-# threading.Thread(target=FileUploadManager, args=['127.0.0.1', 6003]).start()
-# threading.Thread(target=FileUploadManager, args=['127.0.0.1', 6004]).start()
-# threading.Thread(target=FileUploadManager, args=['127.0.0.1', 6005]).start()

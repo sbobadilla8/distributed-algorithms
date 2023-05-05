@@ -5,31 +5,31 @@ from collections import deque
 from .filemgr import FileMgr
 from .mutex.hemlock import HemlockThread, Lock
 
-USE_MUTEX = False
+USE_MUTEX = True
 
 def send_message(connection, data):
     connection.send(rick.dumps(data))
 
 
 def read_message(connection):
-    # self.peerConnectionMutex.acquire()
     data = connection.recv(32 * 1024)
     message = rick.loads(data)
-    # self.peerConnectionMutex.release()
     return message
 
 
 class FileDownloadManager:
-    def __init__(self, file_name, file_size, peers):
+    def __init__(self, file_name, file_size, peers, file_checksum):
         self.connected_peers = []
         self.file_name = file_name
         self.file_size = file_size
         self.peers = peers
+        self.file_checksum = file_checksum
         self.block_indices = None
         self.file_to_download = None
         self.peerConnectionMutex = Lock()
         self.fileWriteMutex = Lock()
         self.blockIndexMutex = Lock()
+        self.download_progress = 'Starting'
 
     def initiate_download(self):
         # Create FileMgr object with given size
@@ -38,7 +38,7 @@ class FileDownloadManager:
 
         # Request Connection to all available peers which respond all get stored in connected_peers
         print("DownloadManager::initiate_download::Connecting to peers ...")
-        max_threads = 4
+        max_threads = 12
         connection_threads = []
         for threadIndex in range(0, max_threads):
             thread = HemlockThread(target=self.request_peer_connection,
@@ -56,6 +56,7 @@ class FileDownloadManager:
         # random.shuffle(self.block_indices)
 
         # Request blocks from connected peers
+        self.download_progress = "In Progress"
         print("DownloadManager::initiate_download::Downloading file blocks ...")
         block_threads = []
         for threadIndex in range(0, max_threads):
@@ -65,8 +66,7 @@ class FileDownloadManager:
 
         for thread in block_threads:
             thread.join()
-
-        # TODO: Verify file integrity
+        self.download_progress = "Completed"
 
         # Close all connected peers
         print("DownloadManager::initiate_download::Closing all peers ...")
@@ -121,13 +121,22 @@ class FileDownloadManager:
                 # print("DownloadManager::request_blocks_from_peer::Received block {} from {}".format(block_index,
                 # connectedPeer.getpeername()))
                 block = message['result']['block']
-                if USE_MUTEX:
-                    self.fileWriteMutex.lock()
-                self.file_to_download.write_block(block, block_index)
-                if USE_MUTEX:
-                    self.fileWriteMutex.unlock()
-                # print("DownloadManager::request_blocks_from_peer::Finished writing block {} to file".format(
-                # block_index))
+                block_checksum = message['result']['block_checksum']
+                if(block_checksum != self.file_to_download.get_md5_hash(block)):
+                    print(f"Block {block_index} checksum verification failed. Retrying block download.")
+                    if USE_MUTEX:
+                        self.fileWriteMutex.lock()
+                    self.block_indices.append(block_index)
+                    if USE_MUTEX:
+                        self.fileWriteMutex.unlock()
+                else:
+                    if USE_MUTEX:
+                        self.fileWriteMutex.lock()
+                    self.file_to_download.write_block(block, block_index)
+                    if USE_MUTEX:
+                        self.fileWriteMutex.unlock()
+                    # print("DownloadManager::request_blocks_from_peer::Finished writing block {} to file".format(
+                    # block_index))
 
     def close_peer_connection(self, connected_peer):
         send_message(connected_peer, {'action': 'Close_Connection',
@@ -146,4 +155,4 @@ class FileDownloadManager:
         if total_blocks == 0:
             return 0.0
         progress = (total_blocks - remaining_blocks) / total_blocks
-        return progress
+        return (self.download_progress, progress)

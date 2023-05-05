@@ -22,12 +22,19 @@ def file_search(user_input):
 def index_file(new_file, user_address):
     for file in files:
         if new_file['filename'] in file['filename']:
-            file['clients'].append(user_address+":"+str(new_file['port']))
+            file['clients'].append(user_address + ":" + str(new_file['port']))
             return True
     files.append({"filename": new_file['filename'],
                   "size": new_file['size'],
                   "blocks": new_file['blocks'],
-                  "clients": [user_address+":"+str(new_file['port'])],
+                  "clients": [user_address + ":" + str(new_file['port'])],
                   "checksum": new_file['checksum']
                   })
+    return True
+
+
+def remove_file(file):
+    for item in files:
+        if item['filename'] == file['filename']:
+            files.remove(item)
     return True

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import axios from "axios";
 import {
   Box,
   Heading,
@@ -11,7 +12,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { BsDownload } from "react-icons/bs";
-import axios from "axios";
+import { humanFileSize } from "../utils/fileSize.js";
 
 const FileCard = ({ item, setResults, backendAddress }) => {
   const toast = useToast();
@@ -19,10 +20,11 @@ const FileCard = ({ item, setResults, backendAddress }) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const startDownload = async (item) => {
     try {
-      const response = await axios.post(`http://${backendAddress}/download`, {
+      await axios.post(`http://${backendAddress}/download`, {
         filename: item.filename,
         size: item.size,
         clients: item.clients,
+        checksum: item.checksum,
       });
       setIsDownloading(true);
     } catch (e) {
@@ -44,18 +46,20 @@ const FileCard = ({ item, setResults, backendAddress }) => {
           `http://${backendAddress}/download?filename=${item.filename}`
         );
         const progress = parseFloat(data.value);
+        const status = data.status;
         setResults((prev) => {
           let temp = [...prev];
           const file = temp.find(
             (tempItem) => tempItem.filename === item.filename
           );
           file.progress = progress;
+          file.status = status;
           return temp;
         });
-        if (progress === 1.0) {
+        if (status === "Completed") {
           setIsDownloading(false);
         }
-      }, 1000);
+      }, 200);
     }
     return () => clearInterval(intervalId);
   }, [isDownloading, item.progress]);
@@ -72,7 +76,7 @@ const FileCard = ({ item, setResults, backendAddress }) => {
         </Stat>
         <Stat>
           <StatLabel>Size</StatLabel>
-          <StatNumber>{item.size}</StatNumber>
+          <StatNumber>{humanFileSize(item.size)}</StatNumber>
         </Stat>
         <Stat>
           <StatLabel>Number of blocks</StatLabel>
@@ -86,7 +90,11 @@ const FileCard = ({ item, setResults, backendAddress }) => {
           icon={<BsDownload />}
         />
       </StatGroup>
-      <Progress value={item.progress * 100} />
+      <Progress
+        colorScheme={item.status === "Completed" ? "teal" : "yellow"}
+        isIndeterminate={item.status === "Verifying"}
+        value={item.progress * 100}
+      />
     </Box>
   );
 };

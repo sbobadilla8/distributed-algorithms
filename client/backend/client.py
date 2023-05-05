@@ -10,7 +10,7 @@ from handlers.uploadmanager import FileUploadManager
 import mimetypes
 
 app = Flask(__name__, template_folder='dist', static_folder='dist', static_url_path='/')
-cors = CORS(app)
+# cors = CORS(app, origins=['http://localhost'])
 port_tcp = 0
 
 files = None
@@ -33,13 +33,14 @@ def files():
         file = request.json
         return jsonify(files.share_file(file))
     elif request.method == 'DELETE':
-        file = request.json['file']
-        return files.remove_file(file)
+        filename = request.args.get("filename", "")
+        server = request.args.get("server", "")
+        file = {"filename": filename, "serverAddress": server}
+        return jsonify(files.remove_file(file))
     else:
         return "", 404
 
 
-# @cross_origin("127.0.0.1")
 @app.route("/picker", methods=['POST'])
 def picker():
     cmd_input = request.json
@@ -96,5 +97,5 @@ if __name__ == "__main__":
     thread = threading.Thread(target=create_listener, args=[port_tcp])
     thread.daemon = True
     thread.start()
-
+    cors = CORS(app, origins=['http://localhost:'+str(port_web)])
     app.run(host="0.0.0.0", port=port_web, debug=True)
