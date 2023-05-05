@@ -88,7 +88,10 @@ const FileCard = ({ item, setResults, backendAddress }) => {
           icon={<BsDownload />}
         />
       </StatGroup>
-      <Progress value={item.progress * 100} />
+      <Progress
+        colorScheme={item.progress === 1 ? "teal" : "yellow"}
+        value={item.progress * 100}
+      />
     </Box>
   );
 };
