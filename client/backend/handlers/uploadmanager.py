@@ -68,9 +68,9 @@ class FileUploadManager:
                 if action == 'Close_Connection':
                     file_name = message['payload']['file_name']
                     self.fileMgrMutex.acquire()
-                    if file_name in self.fileToUpload.keys():
-                        self.fileToUpload[file_name].close_file()
-                        del self.fileToUpload[file_name]
+                    # if file_name in self.fileToUpload.keys():
+                    #     self.fileToUpload[file_name].close_file()
+                    #     del self.fileToUpload[file_name]
                     self.fileMgrMutex.release()
                     close_connection = True
         print("UploadManager::handle_connection::Closing connection {} ...".format(address))
