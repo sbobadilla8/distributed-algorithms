@@ -12,19 +12,18 @@ def send_message(connection, data):
 
 
 def read_message(connection):
-    # self.peerConnectionMutex.acquire()
     data = connection.recv(32 * 1024)
     message = rick.loads(data)
-    # self.peerConnectionMutex.release()
     return message
 
 
 class FileDownloadManager:
-    def __init__(self, file_name, file_size, peers):
+    def __init__(self, file_name, file_size, peers, file_checksum):
         self.connected_peers = []
         self.file_name = file_name
         self.file_size = file_size
         self.peers = peers
+        self.file_checksum = file_checksum
         self.block_indices = None
         self.file_to_download = None
         self.peerConnectionMutex = Lock()
@@ -67,6 +66,11 @@ class FileDownloadManager:
             thread.join()
 
         # TODO: Verify file integrity
+        downloaded_file_checksum = self.file_to_download.get_md5_hash()
+        if(downloaded_file_checksum == self.file_checksum):
+            print("File checksum verification completed.")
+        else:
+            print("File checksum verification failed. Please retry the download.")
 
         # Close all connected peers
         print("DownloadManager::initiate_download::Closing all peers ...")
@@ -121,13 +125,22 @@ class FileDownloadManager:
                 # print("DownloadManager::request_blocks_from_peer::Received block {} from {}".format(block_index,
                 # connectedPeer.getpeername()))
                 block = message['result']['block']
-                if USE_MUTEX:
-                    self.fileWriteMutex.lock()
-                self.file_to_download.write_block(block, block_index)
-                if USE_MUTEX:
-                    self.fileWriteMutex.unlock()
-                # print("DownloadManager::request_blocks_from_peer::Finished writing block {} to file".format(
-                # block_index))
+                block_checksum = message['result']['block_checksum']
+                if(block_checksum != self.file_to_download.get_md5_hash(block)):
+                    print(f"Block {block_index} checksum verification failed. Retrying block download.")
+                    if USE_MUTEX:
+                        self.fileWriteMutex.lock()
+                    self.block_indices.append(block_index)
+                    if USE_MUTEX:
+                        self.fileWriteMutex.unlock()
+                else:
+                    if USE_MUTEX:
+                        self.fileWriteMutex.lock()
+                    self.file_to_download.write_block(block, block_index)
+                    if USE_MUTEX:
+                        self.fileWriteMutex.unlock()
+                    # print("DownloadManager::request_blocks_from_peer::Finished writing block {} to file".format(
+                    # block_index))
 
     def close_peer_connection(self, connected_peer):
         send_message(connected_peer, {'action': 'Close_Connection',

@@ -44,9 +44,13 @@ class FileMgr:
         start_pos = block_index * self.block_size
         self.file_descr.seek(start_pos)
         self.file_descr.write(block)
+        self.file_descr.flush()
 
-    # Generate MD5 hash of the file
-    def get_md5_hash(self):
+    # Generate MD5 hash of a given block.
+    # If block is not provided, generates the hash value of the file.
+    def get_md5_hash(self, block=None):
+        if(block is not None):
+            return hashlib.md5(block).hexdigest()
         self.file_descr.seek(0)
         return hashlib.md5(self.file_descr.read()).hexdigest()
     
@@ -57,10 +61,8 @@ class FileMgr:
     def __write_file(self):
         self.file_descr.seek(0)
         self.file_descr.write(b'\0'*self.file_size)
+        self.file_descr.flush()
 
-    # def __del__(self):
-    #     print("Closing {} . . .".format(self.file_name))
-    #     self.file_descr.close()
 
 # Working Example ###
 # from random import shuffle

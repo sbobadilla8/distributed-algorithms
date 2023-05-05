@@ -24,6 +24,7 @@ const FileCard = ({ item, setResults, backendAddress }) => {
         filename: item.filename,
         size: item.size,
         clients: item.clients,
+        checksum: item.checksum,
       });
       setIsDownloading(true);
     } catch (e) {
