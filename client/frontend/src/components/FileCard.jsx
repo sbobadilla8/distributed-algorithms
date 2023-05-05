@@ -46,18 +46,20 @@ const FileCard = ({ item, setResults, backendAddress }) => {
           `http://${backendAddress}/download?filename=${item.filename}`
         );
         const progress = parseFloat(data.value);
+        const status = data.status;
         setResults((prev) => {
           let temp = [...prev];
           const file = temp.find(
             (tempItem) => tempItem.filename === item.filename
           );
           file.progress = progress;
+          file.status = status;
           return temp;
         });
-        if (progress === 1.0) {
+        if (status === "Completed") {
           setIsDownloading(false);
         }
-      }, 1000);
+      }, 200);
     }
     return () => clearInterval(intervalId);
   }, [isDownloading, item.progress]);
@@ -89,7 +91,8 @@ const FileCard = ({ item, setResults, backendAddress }) => {
         />
       </StatGroup>
       <Progress
-        colorScheme={item.progress === 1 ? "teal" : "yellow"}
+        colorScheme={item.status === "Completed" ? "teal" : "yellow"}
+        isIndeterminate={item.status === "Verifying"}
         value={item.progress * 100}
       />
     </Box>

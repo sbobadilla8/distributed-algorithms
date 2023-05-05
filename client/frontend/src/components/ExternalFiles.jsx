@@ -26,7 +26,7 @@ const ExternalFiles = ({ serverAddress, backendAddress }) => {
       const { data } = await axios.get(
         `http://${serverAddress}/file?input=${input}`
       );
-      setResults(data.map((item) => ({ ...item, progress: 0 })));
+      setResults(data.map((item) => ({ ...item, progress: 0, status: "" })));
     } catch (e) {
       toast({
         title: "Error",

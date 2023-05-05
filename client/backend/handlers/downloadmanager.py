@@ -29,6 +29,7 @@ class FileDownloadManager:
         self.peerConnectionMutex = Lock()
         self.fileWriteMutex = Lock()
         self.blockIndexMutex = Lock()
+        self.download_progress = 'Starting'
 
     def initiate_download(self):
         # Create FileMgr object with given size
@@ -55,6 +56,7 @@ class FileDownloadManager:
         # random.shuffle(self.block_indices)
 
         # Request blocks from connected peers
+        self.download_progress = "In Progress"
         print("DownloadManager::initiate_download::Downloading file blocks ...")
         block_threads = []
         for threadIndex in range(0, max_threads):
@@ -65,12 +67,14 @@ class FileDownloadManager:
         for thread in block_threads:
             thread.join()
 
-        # TODO: Verify file integrity
+        self.download_progress = "Verifying"
         downloaded_file_checksum = self.file_to_download.get_md5_hash()
         if(downloaded_file_checksum == self.file_checksum):
             print("File checksum verification completed.")
+            self.download_progress = "Completed"
         else:
             print("File checksum verification failed. Please retry the download.")
+            self.download_progress = "File Verification Failed"
 
         # Close all connected peers
         print("DownloadManager::initiate_download::Closing all peers ...")
@@ -159,4 +163,4 @@ class FileDownloadManager:
         if total_blocks == 0:
             return 0.0
         progress = (total_blocks - remaining_blocks) / total_blocks
-        return progress
+        return (self.download_progress, progress)
