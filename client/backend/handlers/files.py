@@ -41,8 +41,10 @@ class Files:
 
     def remove_file(self, file):
         for item in self.files:
-            if item.name == file.name:
-                self.files.remove(file)
+            if item['filename'] == file['filename']:
+                self.files.remove(item)
+                r = requests.delete('http://' + file['serverAddress'] + '/file',
+                                    json={'filename': file['filename']})
         return self.files
 
     def download_file(self, file):

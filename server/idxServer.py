@@ -1,6 +1,6 @@
 from flask import Flask, request, current_app, jsonify
 from flask_cors import CORS
-from handlers.file import file_search, index_file
+from handlers.file import file_search, index_file, remove_file
 
 app = Flask(__name__)
 cors = CORS(app)
@@ -17,6 +17,9 @@ def file():
         user_address = request.environ['REMOTE_ADDR']
         file_shared = request.json
         return jsonify(index_file(file_shared, user_address)), 204
+    elif request.method == 'DELETE':
+        file = request.json
+        return jsonify(remove_file(file)), 204
     else:
         return "", 404
 

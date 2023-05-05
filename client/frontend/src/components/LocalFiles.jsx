@@ -36,7 +36,7 @@ const LocalFiles = ({ backendAddress, serverAddress }) => {
     } catch (e) {
       toast({
         title: "Error",
-        description: "",
+        description: "Error sharing file",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -46,10 +46,14 @@ const LocalFiles = ({ backendAddress, serverAddress }) => {
 
   const stopShare = async (file) => {
     try {
+      const { data } = await axios.delete(
+        `http://${backendAddress}/files?filename=${file.filename}&server=${serverAddress}`
+      );
+      setFiles(data);
     } catch (e) {
       toast({
         title: "Error",
-        description: "",
+        description: "Error dropping share.",
         status: "error",
         duration: 3000,
         isClosable: true,

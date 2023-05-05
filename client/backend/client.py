@@ -33,13 +33,14 @@ def files():
         file = request.json
         return jsonify(files.share_file(file))
     elif request.method == 'DELETE':
-        file = request.json['file']
-        return files.remove_file(file)
+        filename = request.args.get("filename", "")
+        server = request.args.get("server", "")
+        file = {"filename": filename, "serverAddress": server}
+        return jsonify(files.remove_file(file))
     else:
         return "", 404
 
 
-# @cross_origin("127.0.0.1")
 @app.route("/picker", methods=['POST'])
 def picker():
     cmd_input = request.json
